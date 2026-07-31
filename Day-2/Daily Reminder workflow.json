@@ -1,0 +1,110 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "983f929b-385c-454d-b198-577cfd473d82",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83465fc7-c7e0-4c94-a505-2555f856429a",
+              "name": "message",
+              "value": "Good morning !! please submit your daily internship progress before end of day.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        208,
+        0
+      ],
+      "id": "a377e2ab-74d6-46c6-8e9a-9dcede730faf",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sendTo": "fatimawajid004@gmail.com",
+        "subject": "Daily Internship Reminder",
+        "message": "={{ $json.message }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "65ddf235-f4fd-42f3-bfc2-29ffbfd36872",
+      "name": "Send a message",
+      "webhookId": "a8a4bfdf-94aa-4ad8-ab47-2cef190bd1be",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c91cdc99-41fe-4741-b286-05b66c396ffb",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "HWMAE00afZTAdP3a",
+  "tags": []
+}
