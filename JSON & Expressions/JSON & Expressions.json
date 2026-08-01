@@ -1,0 +1,91 @@
+{
+  "name": "JSON & Expressions",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "5fdee9e5-dd6e-4214-be22-d33d3e09f26b",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "jsCode": "const records = [\n  { Name: \"Ali Khan\", Email: \"ali.khan@example.com\", Department: \"Computer Science\", Score: 85 },\n  { Name: \"Sara Ahmed\", Email: \"sara.ahmed@example.com\", Department: \"Business\", Score: 72 },\n  { Name: \"Bilal Hussain\", Email: \"bilal.hussain@example.com\", Department: \"Engineering\", Score: 45 },\n  { Name: \"Fatima Noor\", Email: \"fatima.noor@example.com\", Department: \"AI\", Score: 91 },\n  { Name: \"Usman Tariq\", Email: \"usman.tariq@example.com\", Department: \"Marketing\", Score: 63 }\n];\n\nreturn records.map(r => ({ json: r }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "8fe675a0-5acf-4f20-a1cc-ebcff9460e13",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0baaffd-54f7-41f0-af90-c94bf214872c",
+              "name": "Classification",
+              "value": "={{ $json.Score >= 80 ? 'Excellent' : $json.Score >= 60 ? 'Good' : 'Needs Improvement' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        416,
+        0
+      ],
+      "id": "3b921724-68a7-4ca5-9b37-a11173fc9c92",
+      "name": "Edit Fields"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "8fc220cb-acd0-46c6-aeea-2ce8c5a6c4e5",
+  "meta": {
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "vicZhV4nkrYU77qW",
+  "tags": []
+}
