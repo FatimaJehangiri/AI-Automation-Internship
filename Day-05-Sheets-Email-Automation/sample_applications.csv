@@ -1,0 +1,11 @@
+id,name,email,score,cgpa,category
+1,Ali Raza,ali.raza@example.com,88,3.4,
+2,Sara Khan,sara.khan@example.com,65,2.8,
+3,Bilal Ahmed,bilal.ahmed@example.com,45,2.1,
+4,Hina Tariq,hina.tariq@example.com,91,3.6,
+5,Usman Ali,,72,2.9,
+6,Ayesha Noor,ayesha.noor@example.com,95,3.8,
+7,Zain Malik,zain.malik@example.com,,2.5,
+8,Mariam Fatima,mariam.fatima@example.com,38,1.9,
+9,Hamza Sheikh,hamza.sheikh@example.com,81,3.1,
+10,Noor Fatima,noor.fatima@example.com,99,3.9,

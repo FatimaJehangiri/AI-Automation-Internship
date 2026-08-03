@@ -1,0 +1,67 @@
+id,name,email,score,cgpa,category,email_subject,email_body
+1,Fatima Wajid,fatimawajid621@gmail.com,88,3.4,Shortlisted,Congratulations! You've been Shortlisted,"Dear Fatima Wajid,
+
+Congratulations! Based on your application (Score: 88, CGPA: 3.4), you have been SHORTLISTED for the next stage of our internship process.
+
+Our team will reach out shortly with next steps.
+
+Best regards,
+Petalnex Internship Team"
+2,Sara Khan,sara.khan@example.com,65,2.8,Needs Review,Your Application is Under Review,"Dear Sara Khan,
+
+Thank you for applying. Your application (Score: 65, CGPA: 2.8) is currently under further review by our team.
+
+We will notify you of the outcome soon.
+
+Best regards,
+Petalnex Internship Team"
+3,Bilal Ahmed,bilal.ahmed@example.com,45,2.1,Not Eligible,Update on Your Internship Application,"Dear Bilal Ahmed,
+
+Thank you for your interest in our internship program. After careful review (Score: 45, CGPA: 2.1), we are unable to move forward with your application at this time.
+
+We encourage you to apply again in the future.
+
+Best regards,
+Petalnex Internship Team"
+4,Hina Tariq,hina.tariq@example.com,91,3.6,Shortlisted,Congratulations! You've been Shortlisted,"Dear Hina Tariq,
+
+Congratulations! Based on your application (Score: 91, CGPA: 3.6), you have been SHORTLISTED for the next stage of our internship process.
+
+Our team will reach out shortly with next steps.
+
+Best regards,
+Petalnex Internship Team"
+5,Usman Ali,,72,2.9,Invalid - Missing Data,Action Needed: Incomplete Application,"Dear Applicant,\n\nWe noticed your application is missing required information. Please resubmit with complete details.\n\nBest regards,\nPetalnex Internship Team"
+6,Ayesha Noor,ayesha.noor@example.com,95,3.8,Shortlisted,Congratulations! You've been Shortlisted,"Dear Ayesha Noor,
+
+Congratulations! Based on your application (Score: 95, CGPA: 3.8), you have been SHORTLISTED for the next stage of our internship process.
+
+Our team will reach out shortly with next steps.
+
+Best regards,
+Petalnex Internship Team"
+7,Zain Malik,zain.malik@example.com,,2.5,Invalid - Missing Data,Action Needed: Incomplete Application,"Dear Applicant,\n\nWe noticed your application is missing required information. Please resubmit with complete details.\n\nBest regards,\nPetalnex Internship Team"
+8,Mariam Fatima,mariam.fatima@example.com,38,1.9,Not Eligible,Update on Your Internship Application,"Dear Mariam Fatima,
+
+Thank you for your interest in our internship program. After careful review (Score: 38, CGPA: 1.9), we are unable to move forward with your application at this time.
+
+We encourage you to apply again in the future.
+
+Best regards,
+Petalnex Internship Team"
+9,Hamza Sheikh,hamza.sheikh@example.com,81,3.1,Shortlisted,Congratulations! You've been Shortlisted,"Dear Hamza Sheikh,
+
+Congratulations! Based on your application (Score: 81, CGPA: 3.1), you have been SHORTLISTED for the next stage of our internship process.
+
+Our team will reach out shortly with next steps.
+
+Best regards,
+Petalnex Internship Team"
+10,Noor Fatima,noor.fatima@example.com,99,3.9,Shortlisted,Congratulations! You've been Shortlisted,"Dear Noor Fatima,
+
+Congratulations! Based on your application (Score: 99, CGPA: 3.9), you have been SHORTLISTED for the next stage of our internship process.
+
+Our team will reach out shortly with next steps.
+
+Best regards,
+Petalnex Internship Team"

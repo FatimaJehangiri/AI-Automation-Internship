@@ -1,0 +1,699 @@
+{
+  "name": "Day 5 - Internship Application Processing",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "05fdb187-8a19-45e4-a976-752ebb94fc8c",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1hwxE8AxHbuXi58moZU3RcE23K7AnKBmn33PkmAvqkL4/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "cb662f1d-6775-4a54-aef2-434c93d62cb1",
+      "name": "Read Applications",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -656,
+        240
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TMHWnJ0j3w9VvQtF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "1fbd6069-6530-4b13-8559-d83f8b0dfcab"
+            },
+            {
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "39b8bbaa-78ff-4a28-be9a-366af878fe6e"
+            },
+            {
+              "leftValue": "={{ $json.score }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "232951d5-1549-4446-bd86-0653b62ae33d"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {
+          "looseTypeValidation": true
+        }
+      },
+      "id": "29211fd1-b5c7-46b0-9361-bba501d76453",
+      "name": "Validate Data",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Number($json.score) }}",
+                    "rightValue": 80,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  },
+                  {
+                    "leftValue": "={{ Number($json.cgpa) }}",
+                    "rightValue": 3,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "Shortlisted"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Number($json.score) }}",
+                    "rightValue": 60,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    }
+                  }
+                ],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "Needs Review"
+            },
+            {
+              "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "leftValue": "={{ Number($json.score) }}",
+                    "rightValue": 60,
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    }
+                  }
+                ],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                }
+              },
+              "renameOutput": true,
+              "outputKey": "Not Eligible"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c93a7cab-888a-49c4-aac5-d19d0cff83d4",
+      "name": "Categorize Candidate",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "93895717-3bce-462c-8195-84b7eb4a57ed",
+              "name": "category",
+              "value": "Shortlisted",
+              "type": "string"
+            },
+            {
+              "id": "aa50b681-0630-4d30-b9be-567ceeaaab11",
+              "name": "email_subject",
+              "value": "Congratulations! You've been Shortlisted",
+              "type": "string"
+            },
+            {
+              "id": "3064ab6c-4fed-4402-ac08-07f5f88d0ce9",
+              "name": "=email_body",
+              "value": "={{ \"Dear \" + $json.name + \",\\n\\nCongratulations! Based on your application (Score: \" + $json.score + \", CGPA: \" + $json.cgpa + \"), you have been SHORTLISTED for the next stage of our internship process.\\n\\nOur team will reach out shortly with next steps.\\n\\nBest regards,\\nPetalnex Internship Team\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "611e62df-4339-48bf-8274-31e17bcecef5",
+      "name": "Set - Shortlisted",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fe1ab902-1ef6-474e-9aae-f64a94424ae6",
+              "name": "category",
+              "value": "Needs Review",
+              "type": "string"
+            },
+            {
+              "id": "4cec8a43-aebd-4f22-9c48-4630bf6fe65f",
+              "name": "email_subject",
+              "value": "Your Application is Under Review",
+              "type": "string"
+            },
+            {
+              "id": "817416af-e677-4f61-a392-c8ad24176eaf",
+              "name": "=email_body",
+              "value": "={{ \"Dear \" + $json.name + \",\\n\\nThank you for applying. Your application (Score: \" + $json.score + \", CGPA: \" + $json.cgpa + \") is currently under further review by our team.\\n\\nWe will notify you of the outcome soon.\\n\\nBest regards,\\nPetalnex Internship Team\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "1bb0ab84-6078-44df-a4db-84de86e4b19a",
+      "name": "Set - Needs Review",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e39790d7-ef4e-4553-abb4-b312bcb8cb20",
+              "name": "category",
+              "value": "Not Eligible",
+              "type": "string"
+            },
+            {
+              "id": "8cadf794-1052-4e52-b71b-6220a0564e6a",
+              "name": "email_subject",
+              "value": "Update on Your Internship Application",
+              "type": "string"
+            },
+            {
+              "id": "f13f52c4-7354-4df9-b6fe-6b06d899f978",
+              "name": "=email_body",
+              "value": "={{ \"Dear \" + $json.name + \",\\n\\nThank you for your interest in our internship program. After careful review (Score: \" + $json.score + \", CGPA: \" + $json.cgpa + \"), we are unable to move forward with your application at this time.\\n\\nWe encourage you to apply again in the future.\\n\\nBest regards,\\nPetalnex Internship Team\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "6e585cd2-428a-4103-89e2-046b9aa243a6",
+      "name": "Set - Not Eligible",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9e403119-f010-440b-a213-a7eada2b266d",
+              "name": "category",
+              "value": "Invalid - Missing Data",
+              "type": "string"
+            },
+            {
+              "id": "bb27d21b-c5ad-4b89-b119-6833cbe84f5a",
+              "name": "email_subject",
+              "value": "Action Needed: Incomplete Application",
+              "type": "string"
+            },
+            {
+              "id": "6394f459-4df5-4745-b9cc-31e3b2692d34",
+              "name": "email_body",
+              "value": "Dear Applicant,\\n\\nWe noticed your application is missing required information. Please resubmit with complete details.\\n\\nBest regards,\\nPetalnex Internship Team",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "ad3cc620-e8eb-44b2-8a30-5bcb1d8d96bb",
+      "name": "Set - Invalid Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "dad2acc9-0fc3-4bda-ba82-0f70c0059bb5",
+      "name": "Merge Valid Branches",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        224,
+        144
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "6a00ec60-7b76-4eb7-aeed-b7a4b3289f46",
+      "name": "Merge All Records",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        448,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.email }} ",
+        "subject": "={{ $json.email_subject }}",
+        "message": "={{ $json.email_body }}",
+        "options": {}
+      },
+      "id": "6dbe3b84-44f3-4adb-9822-6bc41fd0741a",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1120,
+        240
+      ],
+      "webhookId": "13d648b7-6cc2-4a5b-a204-571e91bf2380",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "e10726b3-d312-4076-85a4-54aa256ff609",
+              "leftValue": "={{ $json.email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        240
+      ],
+      "id": "9ffa917f-4ccf-423a-88f2-f2d21450bf42",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1hwxE8AxHbuXi58moZU3RcE23K7AnKBmn33PkmAvqkL4",
+          "mode": "list",
+          "cachedResultName": "Internship Applications",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hwxE8AxHbuXi58moZU3RcE23K7AnKBmn33PkmAvqkL4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1hwxE8AxHbuXi58moZU3RcE23K7AnKBmn33PkmAvqkL4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "score",
+              "displayName": "score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "cgpa",
+              "displayName": "cgpa",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        656,
+        240
+      ],
+      "id": "6aa40abc-56ae-4389-b737-8d8ceb7b8a01",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TMHWnJ0j3w9VvQtF",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Read Applications",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Applications": {
+      "main": [
+        [
+          {
+            "node": "Validate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Data": {
+      "main": [
+        [
+          {
+            "node": "Categorize Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Invalid Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categorize Candidate": {
+      "main": [
+        [
+          {
+            "node": "Set - Shortlisted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Needs Review",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set - Not Eligible",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Shortlisted": {
+      "main": [
+        [
+          {
+            "node": "Merge Valid Branches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Needs Review": {
+      "main": [
+        [
+          {
+            "node": "Merge Valid Branches",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Set - Not Eligible": {
+      "main": [
+        [
+          {
+            "node": "Merge Valid Branches",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Merge Valid Branches": {
+      "main": [
+        [
+          {
+            "node": "Merge All Records",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - Invalid Data": {
+      "main": [
+        [
+          {
+            "node": "Merge All Records",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Records": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "32eab264-6011-4864-9d74-f50926217129",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "wDOrCleW5qqISHgm",
+  "tags": []
+}
