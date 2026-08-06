@@ -1,0 +1,228 @@
+{
+  "name": "Weather - Rain Alert - v1",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 7 * * *"
+            }
+          ]
+        }
+      },
+      "id": "69185ba6-f5a4-4450-a147-6cefd8111353",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -656,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "34.3302"
+            },
+            {
+              "name": "longitude",
+              "value": "73.1968"
+            },
+            {
+              "name": "current_weather",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "064f6ba8-1dd8-4d4a-9ccf-f859e3ed5dc8",
+      "name": "Get Weather Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -432,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1a1a1a1-0000-0000-0000-000000000001",
+              "name": "weathercode",
+              "value": "={{ $json.current_weather.weathercode }}",
+              "type": "number"
+            },
+            {
+              "id": "a1a1a1a1-0000-0000-0000-000000000002",
+              "name": "temperature",
+              "value": "={{ $json.current_weather.temperature }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e1c16b2e-4c4e-4807-9741-055b2bfedd17",
+      "name": "Extract Weather Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -224,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "b1b1b1b1-0000-0000-0000-000000000001",
+              "leftValue": "={{ $json.weathercode }}",
+              "rightValue": 51,
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "b1b1b1b1-0000-0000-0000-000000000002",
+              "leftValue": "={{ $json.weathercode }}",
+              "rightValue": 70,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "3d88369d-ee38-43d0-a958-0e1f6a1fbf20",
+      "name": "Is It Raining",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        16,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "fatimawajid004@gmail.com",
+        "subject": "=Weather Alert – {{ $json.temperature }}°C today",
+        "message": "=Rain is expected today – please carry an umbrella.\n\nCurrent temperature: {{ $json.temperature }}°C\nWeather code: {{ $json.weathercode }}",
+        "options": {}
+      },
+      "id": "14635923-cf25-4b3a-9438-724c574300dd",
+      "name": "Send Rain Alert Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        64
+      ],
+      "webhookId": "ae55e1a4-c6fc-4527-8bab-986ea46ecbea",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "6759d64c-4ff2-452a-b8de-705496eedb74",
+      "name": "No Alert Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        224,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Weather Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weather Data": {
+      "main": [
+        [
+          {
+            "node": "Extract Weather Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Weather Fields": {
+      "main": [
+        [
+          {
+            "node": "Is It Raining",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is It Raining": {
+      "main": [
+        [
+          {
+            "node": "Send Rain Alert Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Alert Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "45234c27-f735-4099-a91f-9e79311cb80c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "6KHmVKHLALNMK4Ly",
+  "tags": []
+}
