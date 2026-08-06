@@ -1,0 +1,79 @@
+{
+  "name": "Practice - Code Node Data Cleaning - v1",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "14d1db2e-501d-407c-97bd-f0204cec632f",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const rawRecords = [\n  {\"name\":\"  FATIMA \",\"email\":\"FATIMA@GMAIL.COM\",\"score\":92},\n  {\"name\":\" ahmed\",\"email\":\"AHMED@yahoo.COM\",\"score\":84},\n  {\"name\":\" sara \",\"email\":\"SARA@MAIL.COM\",\"score\":77},\n  {\"name\":\" ali\",\"email\":\"ALI@MAIL.COM\",\"score\":65},\n  {\"name\":\"  usman\",\"email\":\"USMAN@MAIL.COM\",\"score\":55},\n  {\"name\":\" ayesha \",\"email\":\"AYESHA@MAIL.COM\",\"score\":89},\n  {\"name\":\" HINA\",\"email\":\"HINA@MAIL.COM\",\"score\":95},\n  {\"name\":\" zain \",\"email\":\"ZAIN@MAIL.COM\",\"score\":73},\n  {\"name\":\" hamza \",\"email\":\"HAMZA@MAIL.COM\",\"score\":81},\n  {\"name\":\" iqra\",\"email\":\"IQRA@MAIL.COM\",\"score\":67},\n  {\"name\":\" daniyal \",\"email\":\"DANIYAL@MAIL.COM\",\"score\":91},\n  {\"name\":\" maria\",\"email\":\"MARIA@MAIL.COM\",\"score\":58},\n  {\"name\":\" abdullah\",\"email\":\"ABDULLAH@MAIL.COM\",\"score\":86},\n  {\"name\":\" areeba \",\"email\":\"AREEBA@MAIL.COM\",\"score\":79},\n  {\"name\":\" hammad \",\"email\":\"HAMMAD@MAIL.COM\",\"score\":88}\n];\n\nreturn rawRecords.map(record => ({ json: record }));"
+      },
+      "id": "c3946de7-e344-4f79-af2c-b589416bbc37",
+      "name": "Generate Messy Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "function toTitleCase(str) {\n  return str\n    .trim()\n    .toLowerCase()\n    .split(' ')\n    .filter(word => word.length > 0)\n    .map(word => word.charAt(0).toUpperCase() + word.slice(1))\n    .join(' ');\n}\n\nfunction getGrade(score) {\n  if (score >= 90) return 'A';\n  if (score >= 80) return 'B';\n  if (score >= 70) return 'C';\n  if (score >= 60) return 'D';\n  return 'F';\n}\n\nconst gradeRank = { A: 4, B: 3, C: 2, D: 1, F: 0 };\n\nconst items = $input.all();\n\nconst transformed = items.map(item => {\n  const data = item.json;\n  const name = toTitleCase(data.name ?? '');\n  const email = (data.email ?? '').trim().toLowerCase();\n  const score = data.score ?? 0;\n  const grade = getGrade(score);\n  const summary = `${name} scored ${score} points (Grade ${grade})`;\n\n  return {\n    json: { name, email, score, grade, summary }\n  };\n});\n\nconst topPerformers = transformed.filter(item => gradeRank[item.json.grade] >= gradeRank['B']);\n\nreturn topPerformers;"
+      },
+      "id": "56bdb069-1fd5-4d50-83a9-b032b490affd",
+      "name": "Normalize And Grade Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        272,
+        16
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Generate Messy Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Messy Data": {
+      "main": [
+        [
+          {
+            "node": "Normalize And Grade Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0d5e4260-9173-4879-9fe4-4ce9e5032641",
+  "meta": {
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "O6PZIlp4IcqFXo2I",
+  "tags": []
+}
