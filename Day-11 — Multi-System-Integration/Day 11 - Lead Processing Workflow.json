@@ -1,0 +1,364 @@
+{
+  "name": "Day 11 - Lead Processing Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "petalnex/lead-processing",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8e86c538-94a0-43cb-ae3b-9bf01c500d69",
+      "name": "New Lead Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        512,
+        -112
+      ],
+      "webhookId": "petalnex-lead-processing"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst name = String(body.name ?? '').trim();\nconst email = String(body.email ?? '').trim().toLowerCase();\nconst company = String(body.company ?? '').trim();\nconst city = String(body.city ?? '').trim();\nconst interest = String(body.interest ?? '').trim();\n\nif (!name || !email || !company || !city || !interest) {\n  throw new Error('Validation failed: name, email, company, city and interest are required.');\n}\nif (!/^\\S+@\\S+\\.\\S+$/.test(email)) {\n  throw new Error('Validation failed: invalid email address.');\n}\n\nreturn [{ json: { name, email, company, city, interest, receivedAt: new Date().toISOString(), status: 'New' } }];"
+      },
+      "id": "1a14e284-593f-42e8-a38a-f89a39a6f022",
+      "name": "Validate Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "url": "https://geocoding-api.open-meteo.com/v1/search",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "name",
+              "value": "={{ $json.city }}"
+            },
+            {
+              "name": "count",
+              "value": "1"
+            },
+            {
+              "name": "language",
+              "value": "en"
+            },
+            {
+              "name": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d80bd0f1-e9d3-4140-96ec-6fe53c8aaa02",
+      "name": "Enrich Lead with City API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1072,
+        -112
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const lead = $('Validate Lead').item.json;\nconst result = $json.results?.[0] ?? {};\n\nreturn [{ json: {\n  ...lead,\n  country: result.country ?? 'Unknown',\n  countryCode: result.country_code ?? 'Unknown',\n  latitude: result.latitude ?? null,\n  longitude: result.longitude ?? null,\n  timezone: result.timezone ?? 'Unknown',\n  enriched: Boolean($json.results?.length)\n} }];"
+      },
+      "id": "a74794bf-5111-4ab3-8090-5fe6491d2890",
+      "name": "Build Enriched Lead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1376,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/1jd3o4U7B-Fs5RtgcEIvcQNK80BH7pCKdI1MTEsnChm4/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "interest",
+              "displayName": "interest",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "receivedAt",
+              "displayName": "receivedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "countryCode",
+              "displayName": "countryCode",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "latitude",
+              "displayName": "latitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "longitude",
+              "displayName": "longitude",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "timezone",
+              "displayName": "timezone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "enriched",
+              "displayName": "enriched",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "213dfe97-031f-45a1-ad94-6a9190576f17",
+      "name": "Save Lead",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1648,
+        -112
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TMHWnJ0j3w9VvQtF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "fatimawajid004@gmail.com",
+        "subject": "New Lead: {{ $json.name }} - {{ $json.company }}",
+        "emailType": "text",
+        "message": "A new lead has been received.\n\nName: {{ $json.name }}\nEmail: {{ $json.email }}\nCompany: {{ $json.company }}\nCity: {{ $json.city }}\nCountry: {{ $json.country }}\nInterest: {{ $json.interest }}\n\nThe lead has been validated, enriched and saved to Google Sheets.",
+        "options": {}
+      },
+      "id": "e1bfad45-dfac-4081-b609-44953c024e3d",
+      "name": "Notify Sales Team",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1872,
+        -112
+      ],
+      "webhookId": "65f9d694-1705-46e2-be24-1d16fe6aeff7",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: true, message: 'Lead processed successfully.', leadEmail: $('Validate Lead').item.json.email, enriched: $json.enriched } }}",
+        "options": {}
+      },
+      "id": "8b2a7942-9b9b-4edc-a834-c29f08e664ba",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        2096,
+        -96
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Lead Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead": {
+      "main": [
+        [
+          {
+            "node": "Enrich Lead with City API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enrich Lead with City API": {
+      "main": [
+        [
+          {
+            "node": "Build Enriched Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Enriched Lead": {
+      "main": [
+        [
+          {
+            "node": "Save Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Lead": {
+      "main": [
+        [
+          {
+            "node": "Notify Sales Team",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Sales Team": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f31df25d-a3f9-44f6-9ab9-6ddbcd53e52c",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "U0Z9RiWVJLOr8u4R",
+  "tags": []
+}
