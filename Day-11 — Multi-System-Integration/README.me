@@ -1,0 +1,432 @@
+# Day 11 — Multi-System Integration with n8n
+
+## AI Automation Internship — Petalnex Pvt. Ltd.
+
+### Project: Lead Processing and Enrichment Workflow
+
+---
+
+## 📌 Project Overview
+
+This project is an **event-driven lead processing automation workflow built using n8n**.
+
+The workflow receives new lead information through a **Webhook**, validates the submitted information, uses an **external API to enrich the lead**, saves the processed lead into **Google Sheets**, and sends a notification to the **Sales Team through Gmail**.
+
+The workflow also includes **conditional validation using an IF node**. If incorrect or incomplete information is submitted, the workflow stops the lead-processing path and returns a validation error instead of sending invalid data to the external API or sales team.
+
+### Overall Workflow
+
+```text
+New Lead
+   ↓
+Webhook
+   ↓
+Validate Lead
+    ↓
+ API Lookup
+    ↓
+  Enrich Lead
+     ↓
+   Save to Google Sheets
+    ↓
+ Notify Sales Team
+   ↓ 
+Webhook Response
+  
+```
+
+---
+
+# 🎯 Objective
+
+The objective of this task is to understand how multiple applications and services can be connected together to create a complete business automation pipeline.
+
+The workflow demonstrates how to:
+
+* Receive data using a webhook
+* Validate incoming information
+* Use an IF node for conditional workflow branching
+* Connect to an external API
+* Enrich incoming lead data
+* Store processed data in Google Sheets
+* Notify a sales team through email
+* Return a response to the application that submitted the lead
+
+---
+
+# 🧠 What I Learned
+
+This project helped demonstrate the concept of **multi-system integration**.
+
+Instead of manually moving information between different applications, n8n connects the systems and moves the information automatically.
+
+For example:
+
+```text
+Website
+   ↓
+n8n Webhook
+   ↓
+Validation
+   ↓
+External API
+   ↓
+Google Sheets
+   ↓
+Gmail
+```
+
+Each system performs a specific job while n8n coordinates the complete process.
+
+---
+
+# 🛠️ Technologies Used
+
+* **n8n** — Workflow automation platform
+* **Webhook** — Receives incoming lead data
+* **Code Node** — Validates and transforms data
+* **IF Node** — Determines whether the submitted lead is valid
+* **HTTP Request Node** — Communicates with the external API
+* **Open-Meteo Geocoding API** — Provides location information for the submitted city
+* **Google Sheets** — Stores processed leads
+* **Gmail** — Sends notifications to the sales team
+* **Postman** — Used to test the webhook
+
+---
+
+# 🔄 Workflow Components
+
+## 1. New Lead Webhook
+
+The workflow starts with an n8n **Webhook** node.
+
+The webhook receives a `POST` request containing lead information.
+
+### Example Request
+
+```json
+{
+  "name": "Ali Raza",
+  "email": "ali@example.com",
+  "company": "Demo Solutions",
+  "city": "Islamabad",
+  "interest": "AI Automation"
+}
+```
+
+The webhook acts as the entry point of the workflow.
+
+---
+
+# 2. Validate Lead
+
+After receiving the data, the workflow validates the submitted information.
+
+The following fields are checked:
+
+* Name
+* Email
+* Company
+* City
+* Interest
+
+The validation also checks whether the email address has a valid format.
+
+The validation process produces information such as:
+
+```json
+{
+  "isValid": true,
+  "validationErrors": []
+}
+```
+
+For invalid information:
+
+```json
+{
+  "isValid": false,
+  "validationErrors": [
+    "Name is required.",
+    "Invalid email address."
+  ]
+}
+```
+
+This prevents incorrect information from continuing through the workflow.
+
+---
+
+# 4. External API Lookup
+
+Valid leads are sent to an external API for enrichment.
+
+The workflow uses the **Open-Meteo Geocoding API**.
+
+The submitted city is sent as a query parameter.
+
+For example:
+
+```text
+city = Islamabad
+```
+
+The API can provide additional location information such as:
+
+* Country
+* Country code
+* Latitude
+* Longitude
+* Timezone
+
+This demonstrates the concept of **API-based data enrichment**.
+
+---
+
+# 5. Build Enriched Lead
+
+The workflow combines the original lead information with the information returned by the API.
+
+### Original Data
+
+```json
+{
+  "name": "Ali Raza",
+  "email": "ali@example.com",
+  "company": "Demo Solutions",
+  "city": "Islamabad",
+  "interest": "AI Automation"
+}
+```
+
+### Enriched Data
+
+The workflow adds information such as:
+
+```text
+country
+countryCode
+latitude
+longitude
+timezone
+```
+
+The result is a more complete lead record.
+
+---
+
+# 6. Save Lead to Google Sheets
+
+After enrichment, the lead is stored in Google Sheets.
+
+A spreadsheet can contain the following columns:
+
+| Field       | Description                |
+| ----------- | -------------------------- |
+| name        | Lead's name                |
+| email       | Lead's email               |
+| company     | Lead's company             |
+| city        | Lead's city                |
+| interest    | Lead's area of interest    |
+| country     | Country returned by API    |
+| countryCode | Country code               |
+| latitude    | Geographic latitude        |
+| longitude   | Geographic longitude       |
+| timezone    | Lead's timezone            |
+| receivedAt  | Time the lead was received |
+| status      | Lead processing status     |
+
+The workflow uses the **Append Row** operation so each new lead is added as a new record.
+
+---
+
+# 7. Notify Sales Team
+
+After successfully saving the lead, the workflow sends an email notification to the sales team.
+
+### Example Notification
+
+```text
+Subject:
+New Lead: Ali Raza - Demo Solutions
+
+A new lead has been received.
+
+Name: Ali Raza
+Email: ali@example.com
+Company: Demo Solutions
+City: Islamabad
+Country: Pakistan
+Interest: AI Automation
+
+The lead has been validated, enriched and saved to Google Sheets.
+```
+
+This means the sales team does not have to constantly monitor the spreadsheet.
+
+They receive the information automatically.
+
+---
+
+# 8. Webhook Response
+
+After successful processing, the workflow returns a JSON response.
+
+Example:
+
+```json
+{
+  "success": true,
+  "message": "Lead processed successfully.",
+  "leadEmail": "ali@example.com",
+  "enriched": true
+}
+```
+
+For invalid data, the response can indicate that validation failed.
+
+This allows the application sending the request to know whether the lead was successfully processed.
+
+---
+
+# 🧪 Testing with Postman
+
+Postman is used to simulate a website or application sending a lead to the webhook.
+
+### Method
+
+```text
+POST
+```
+
+### Body
+
+Select:
+
+```text
+Body → raw → JSON
+```
+
+Use:
+
+```json
+{
+  "name": "Ali Raza",
+  "email": "ali@example.com",
+  "company": "Demo Solutions",
+  "city": "Islamabad",
+  "interest": "AI Automation"
+}
+```
+
+Send the request to the n8n Webhook Test URL.
+
+---
+
+# ❌ Invalid Data Test
+
+The workflow should also be tested with incorrect information.
+
+Example:
+
+```json
+{
+  "name": "",
+  "email": "wrong-email",
+  "company": "Demo Solutions",
+  "city": "",
+  "interest": "AI Automation"
+}
+```
+
+The validation process should detect the problems.
+
+The IF node should take the **FALSE** branch.
+
+The invalid lead should **not** continue to:
+
+```text
+External API
+Google Sheets
+Sales Notification
+```
+
+Instead, the workflow should return a validation error.
+
+This demonstrates conditional logic and basic error handling.
+
+--
+
+# 💼 Real-World Business Use Case
+
+This workflow can be used by businesses that receive leads from:
+
+* Contact forms
+* Landing pages
+* Marketing campaigns
+* Chatbots
+* CRM systems
+* Other applications
+
+Instead of manually processing every lead, the workflow can automatically:
+
+1. Receive the lead
+2. Check the information
+3. Enrich the data
+4. Store the lead
+5. Notify the sales team
+
+This reduces repetitive manual work and helps the sales team respond faster.
+
+---
+
+# 🚀 Future Improvements
+
+The workflow can be extended with additional automation features such as:
+
+* CRM integration
+* Slack or Microsoft Teams notifications
+* AI-based lead classification
+* Lead scoring
+* Duplicate lead detection
+* Automatic follow-up emails
+* Database storage
+* Customer relationship management
+* AI agents for lead analysis
+* Different notifications for high-priority leads
+
+For example:
+
+```text
+Webhook
+   ↓
+Validate
+   ↓
+AI Lead Analysis
+   ↓
+Lead Score
+   ↓
+IF
+ ┌─┴─────────────┐
+ ↓               ↓
+High Priority   Normal
+ ↓               ↓
+Sales Alert     Regular Queue
+```
+
+---
+
+# 📝 Conclusion
+
+The Day 11 project demonstrates how n8n can be used to build a **complete multi-system business automation workflow**.
+
+The workflow connects a webhook, validation logic, conditional branching, an external API, Google Sheets, and Gmail into one automated pipeline.
+
+The key concept learned from this task is:
+
+> **Receive data → Validate it → Enrich it → Store it → Notify the right person.**
+
+Instead of manually transferring information between different systems, n8n coordinates the entire process automatically.
+
+---
+
