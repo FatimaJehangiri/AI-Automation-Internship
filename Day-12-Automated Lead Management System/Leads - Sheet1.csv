@@ -1,0 +1,3 @@
+name,email,company,service,budget,isValid,validationErrors,leadScore,priority
+James Lee,james@smalltech.com,SmallTech LLC,website automation,3000,TRUE,[],3,Medium
+James Lee,james@smalltech.com,SmallTech LLC,website automation,3000,TRUE,[],3,Medium
