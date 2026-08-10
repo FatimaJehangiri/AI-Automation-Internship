@@ -1,0 +1,453 @@
+{
+  "name": "Automated Lead Management System",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "9756253b-91e7-4320-bcfa-898d4fba4c95",
+      "name": "Lead Intake Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        240
+      ],
+      "webhookId": "da6068cb-5d82-4a28-83ac-e7a130b424c4"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Validates required fields, email format, and budget type\nconst raw = $input.item.json;\n   const item = raw.body ? raw.body : raw;\n\nconst requiredFields = ['name', 'email', 'company', 'service', 'budget'];\nconst errors = [];\n\nfor (const field of requiredFields) {\n  const value = item[field];\n  if (value === undefined || value === null || value.toString().trim() === '') {\n    errors.push(`Missing required field: ${field}`);\n  }\n}\n\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\nif (item.email && !emailRegex.test(item.email)) {\n  errors.push('Invalid email format');\n}\n\nconst budgetNum = Number(item.budget);\nif (item.budget !== undefined && item.budget !== null && item.budget !== '' && isNaN(budgetNum)) {\n  errors.push('Budget must be a number');\n}\n\nreturn {\n  json: {\n    name: item.name,\n    email: item.email,\n    company: item.company,\n    service: item.service,\n    budget: isNaN(budgetNum) ? item.budget : budgetNum,\n    isValid: errors.length === 0,\n    validationErrors: errors\n  }\n};"
+      },
+      "id": "35ea3972-86b8-4b05-9848-da6d6432238d",
+      "name": "Validate Lead Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{$json.isValid}}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c960ce42-baa2-49cf-8b68-c63f6263a7e2",
+      "name": "IF Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -656,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Scores the lead and assigns a priority tier\nconst lead = $input.item.json;\nlet score = 0;\n\n// --- Budget scoring ---\nconst budget = Number(lead.budget) || 0;\nif (budget >= 10000) score += 3;\nelse if (budget >= 5000) score += 2;\nelse if (budget >= 1000) score += 1;\n\n// --- Service type scoring ---\n// Edit this list to match the services you actually offer\nconst highValueServices = ['ai agent', 'automation system', 'custom integration', 'enterprise', 'chatbot'];\nconst serviceLower = (lead.service || '').toString().toLowerCase();\nif (highValueServices.some(s => serviceLower.includes(s))) {\n  score += 2;\n} else if (serviceLower.trim() !== '') {\n  score += 1;\n}\n\n// --- Company provided ---\nif (lead.company && lead.company.toString().trim() !== '') {\n  score += 1;\n}\n\n// --- Priority tier ---\nlet priority = 'Low';\nif (score >= 5) priority = 'High';\nelse if (score >= 3) priority = 'Medium';\n\nreturn {\n  json: {\n    ...lead,\n    leadScore: score,\n    priority\n  }\n};"
+      },
+      "id": "acbb9191-a3fb-4d90-9209-016ea1cd7bee",
+      "name": "Lead Scoring",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "High",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "Medium",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$json.priority}}",
+                    "rightValue": "Low",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "743157f1-2fa5-4ff8-abdc-b152e671cd89",
+      "name": "Priority Router",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "fatimawajid004@gmail.com",
+        "subject": "=🔥 High Priority Lead: {{$json.name}} from {{$json.company}}",
+        "message": "=A new HIGH priority lead just came in — follow up ASAP.\n\nName: {{$json.name}}\nEmail: {{$json.email}}\nCompany: {{$json.company}}\nService interested in: {{$json.service}}\nBudget: {{$json.budget}}\nLead Score: {{$json.leadScore}}",
+        "options": {}
+      },
+      "id": "c3ace4fe-8098-489f-aeb9-da2075f7b190",
+      "name": "Notify Sales - High Priority",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "b84842a0-e488-43c6-b96b-4ead197c16dc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/1qu9Iv7cjHv48_EV9IBqEtnVLmnPo-Uyv-W1817g05-U/edit?gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qu9Iv7cjHv48_EV9IBqEtnVLmnPo-Uyv-W1817g05-U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "125a0a50-49b5-4f55-bbbd-8bd22e5b22c3",
+      "name": "Save to Lead Database",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        144
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TMHWnJ0j3w9VvQtF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1z9U9ZJWBixu4p4lPFWJbfWpe79diNPN_bY82hIuXlXU/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1z9U9ZJWBixu4p4lPFWJbfWpe79diNPN_bY82hIuXlXU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "58a37993-b91a-489b-a80c-141af1b587b3",
+      "name": "Add to Nurture List",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        0,
+        288
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "TMHWnJ0j3w9VvQtF",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{$('Lead Scoring').item.json.email}}",
+        "subject": "Thanks for reaching out, {{$('Lead Scoring').item.json.name}}!",
+        "message": "=Hi {{$('Lead Scoring').item.json.name}},\n\nThanks for telling us about your {{$('Lead Scoring').item.json.service}} needs at {{$('Lead Scoring').item.json.company}}. We've received your request and someone from our team will follow up shortly.\n\nTalk soon,\nThe Team",
+        "options": {}
+      },
+      "id": "46376bb5-1790-4f8f-a3ec-8812cbcf5679",
+      "name": "Send Acknowledgment Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        224,
+        144
+      ],
+      "webhookId": "52a2afad-1ebd-4c70-b1d5-702083eb7da3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "iaF5sSbwrqPC92h9",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"success\", \"message\": \"Lead received and processed\", \"priority\": $('Lead Scoring').item.json.priority, \"leadScore\": $('Lead Scoring').item.json.leadScore } }}",
+        "options": {}
+      },
+      "id": "d88bfd50-54d4-4a35-959f-4c7003eaf8aa",
+      "name": "Respond Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"error\", \"message\": \"Validation failed\", \"errors\": $json.validationErrors } }}",
+        "options": {}
+      },
+      "id": "24c7c3ad-bb2f-4f9e-b0ba-4d1cb407a5ce",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        -448,
+        400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Lead Intake Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Data": {
+      "main": [
+        [
+          {
+            "node": "IF Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF Valid?": {
+      "main": [
+        [
+          {
+            "node": "Lead Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lead Scoring": {
+      "main": [
+        [
+          {
+            "node": "Priority Router",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Priority Router": {
+      "main": [
+        [
+          {
+            "node": "Notify Sales - High Priority",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Save to Lead Database",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Add to Nurture List",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify Sales - High Priority": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Lead Database": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add to Nurture List": {
+      "main": [
+        [
+          {
+            "node": "Send Acknowledgment Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Acknowledgment Email": {
+      "main": [
+        [
+          {
+            "node": "Respond Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "3a2aa827-2481-465e-81a8-32106db58ae3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ad875f9ad0c567295e964449e1c81ce3733daf903b82366fc664f1330e59d774"
+  },
+  "nodeGroups": [],
+  "id": "oepAJTLshp7Dzhds",
+  "tags": []
+}
