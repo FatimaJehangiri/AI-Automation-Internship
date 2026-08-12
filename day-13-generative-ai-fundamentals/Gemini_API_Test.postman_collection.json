@@ -1,1 +1,32 @@
-
+{
+    "candidates": [
+        {
+            "content": {
+                "parts": [
+                    {
+                        "text": "The capital of Japan is **Tokyo**.",
+                        "thoughtSignature": "EsEDCr4DARFNMg8b5OZvpMmBo7wZPN6weURNNLOvxEa0RS+VDHxNxcPDb9SnIndpUl6vtYpMjPRhKeWsj9JMI04DsMuw5PTi0DbceWUJjU1my+2uQ9yijP45w7/lMYKx8VR8xQ0mDF6Rz8jiyTyG2T+vch5ag+7YtprWIEsjifUo2ZdZmx+NDxacEmtC8rT2GItRRqgviJOjXY+Iv/GmoD9bMl3HQPnPfVArcebINITHWKk/o36tG9q12+gPp7zSGIQQ+GYv79lAQrkY+QYIDudcKkVSyefhh1lqCNdgBIZnvnOgKRgYJlstKrykZzSa9DGYRzDozh9gJzUIiVs9qQqAyDyaNxMsQ8egTshQ9Pq2VY75C7R1KIS1yIiTUO8vFL4wCcU9pvpcY6MSZcXfteAdYrZ16fUwzybu+mARn5bg2SkK2/MrzzRqV6hO7xR7y/ixO4Dj5HKtqWekdl8xlO3F3cJaVp6U9fZlc27pUuo1ve3Gw72YFU2P3ENAlhAoQq9adIokG5jFIZUVAFX/Az2W2tvllVF1V3NXRwdx0fiqpAPZLIzxAbkKJOKGbJeJAuPBlOJA0uWM7Xcr9GRSikDX/Z0="
+                    }
+                ],
+                "role": "model"
+            },
+            "finishReason": "STOP",
+            "index": 0
+        }
+    ],
+    "usageMetadata": {
+        "promptTokenCount": 7,
+        "candidatesTokenCount": 8,
+        "totalTokenCount": 101,
+        "promptTokensDetails": [
+            {
+                "modality": "TEXT",
+                "tokenCount": 7
+            }
+        ],
+        "thoughtsTokenCount": 86,
+        "serviceTier": "standard"
+    },
+    "modelVersion": "gemini-3.6-flash",
+    "responseId": "oo18auLkELDi_uMPgdrMwA4"
+}
