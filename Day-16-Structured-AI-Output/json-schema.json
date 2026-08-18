@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "properties": {
+    "category": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    },
+    "sentiment": {
+      "type": "string"
+    },
+    "department": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "category",
+    "priority",
+    "sentiment",
+    "department",
+    "summary"
+  ],
+  "additionalProperties": false
+}
