@@ -1,0 +1,662 @@
+{
+  "name": "Day 15 - AI Email Classification (Groq)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-classify",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "26e88710-2097-45d6-b0bd-b18e69831029",
+      "name": "New Email (Webhook)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1104,
+        304
+      ],
+      "webhookId": "7760f8a4-ff00-4bc4-9c53-48b13c872f6f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "from",
+              "type": "string",
+              "value": "={{ $json.body?.from || $json.from || 'unknown@sender.com' }}"
+            },
+            {
+              "id": "a2",
+              "name": "subject",
+              "type": "string",
+              "value": "={{ $json.body?.subject || $json.subject || '(no subject)' }}"
+            },
+            {
+              "id": "a3",
+              "name": "body",
+              "type": "string",
+              "value": "={{ $json.body?.body || $json.body?.message || $json.message || '' }}"
+            },
+            {
+              "id": "a4",
+              "name": "receivedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d11d7d6d-a250-4d16-80b9-7325a8d5d77b",
+      "name": "Normalize Email Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -880,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "maxTokensToSample": 150,
+          "temperature": 0
+        }
+      },
+      "id": "bc52a424-acb1-4c20-a06d-8bd0338b0d16",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        -656,
+        512
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "3F11lwo2shv7lAg7",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email classification assistant for a business inbox.\n\nClassify the following email into EXACTLY ONE of these categories:\n- Sales\n- Support\n- Complaint\n- Invoice\n- Spam\n- General\n\nRules:\n- Respond with ONLY the category name, nothing else. No punctuation, no explanation, no extra words.\n- If the email is a purchase inquiry, quote request, or pricing question, use \"Sales\".\n- If the email is a technical question or help request about an existing product/service, use \"Support\".\n- If the email expresses dissatisfaction, frustration, or a formal grievance, use \"Complaint\".\n- If the email is about billing, payments, or invoices, use \"Invoice\".\n- If the email looks like an unsolicited promotion, phishing attempt, or irrelevant bulk email, use \"Spam\".\n- If it doesn't clearly fit any category above, use \"General\".\n\nEmail details:\nFrom: {{ $json.from }}\nSubject: {{ $json.subject }}\nBody: {{ $json.body }}\n\nCategory:"
+      },
+      "id": "dc4dea2c-6929-49b1-a3ad-24b4a1b9e568",
+      "name": "Classify Email (LLM Chain)",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        -656,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const allowed = [\"Sales\", \"Support\", \"Complaint\", \"Invoice\", \"Spam\", \"General\"];\n\n// Basic LLM Chain output shape varies by n8n version:\n// older versions -> { text: \"Sales\" }\n// newer versions -> { response: { text: \"Sales\" } }\nconst item = $input.item.json;\nlet raw = \"\";\nif (typeof item.text === \"string\") {\n  raw = item.text;\n} else if (item.response && typeof item.response.text === \"string\") {\n  raw = item.response.text;\n} else if (item.response && typeof item.response === \"string\") {\n  raw = item.response;\n} else if (typeof item.output === \"string\") {\n  raw = item.output;\n}\n\nraw = (raw || \"\").toString().trim();\n\n// Clean up: strip punctuation/quotes/markdown the model might add\nconst cleaned = raw.replace(/[\\*\\.\\\"'`]/g, \"\").trim();\n\n// Case-insensitive match against allowed categories\nlet category = allowed.find(c => c.toLowerCase() === cleaned.toLowerCase());\n\n// Fallback if the model returned something unexpected\nif (!category) {\n  category = \"General\";\n}\n\nconst upstream = $(\"Normalize Email Data\").item.json;\n\nreturn {\n  json: {\n    from: upstream.from,\n    subject: upstream.subject,\n    body: upstream.body,\n    receivedAt: upstream.receivedAt,\n    category: category,\n    rawModelOutput: raw\n  }\n};"
+      },
+      "id": "1767bee7-8747-4724-9405-6d3287f8f0e9",
+      "name": "Validate & Extract Category",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -448,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c1",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Sales",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c2",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Support",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c3",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Complaint",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c4",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Invoice",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c5",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "Spam",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "c6",
+                    "leftValue": "={{ $json.category }}",
+                    "rightValue": "General",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "General"
+        }
+      },
+      "id": "7afeee42-cfbc-44f2-bbe0-29016f3b1f0f",
+      "name": "Route by Category",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r1",
+              "name": "action",
+              "type": "string",
+              "value": "Forward to Sales team / create CRM lead"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f0217b97-8aff-4bf7-88d1-d9c2bfd46c40",
+      "name": "Sales Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r2",
+              "name": "action",
+              "type": "string",
+              "value": "Create support ticket"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9da8523b-c16a-42bc-bc55-a2e3e18897ab",
+      "name": "Support Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r3",
+              "name": "action",
+              "type": "string",
+              "value": "Escalate to manager, flag as urgent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9219e95d-d382-4068-ab22-e6648e12d2fc",
+      "name": "Complaint Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r4",
+              "name": "action",
+              "type": "string",
+              "value": "Forward to Accounts/Finance"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "665c8675-3846-4247-ac7f-01c5bfb0d206",
+      "name": "Invoice Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r5",
+              "name": "action",
+              "type": "string",
+              "value": "Discard / do not respond"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "aa8e4563-d5d2-4f10-aa1b-20ee5f0b8223",
+      "name": "Spam Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "r6",
+              "name": "action",
+              "type": "string",
+              "value": "Route to General inbox for manual review"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8042dbd2-8e7d-4ad2-9a63-460f9983774d",
+      "name": "General Route",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1cmhBBtJ5EHp3urDxh1FKfvdkHq2O0RefDIJVVNmBt18/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Sheet1",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "action"
+          ],
+          "schema": [
+            {
+              "id": "action",
+              "displayName": "action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "9b3cb5a5-e7c0-4b5b-b9dc-48daa31898c7",
+      "name": "Log Classification",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        304
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"classified\", \"category\": $('Validate & Extract Category').item.json.category, \"action\": $json.action } }}",
+        "options": {}
+      },
+      "id": "0050e144-89da-4664-9678-ca2667191041",
+      "name": "Send Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        304
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "New Email (Webhook)": {
+      "main": [
+        [
+          {
+            "node": "Normalize Email Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Email Data": {
+      "main": [
+        [
+          {
+            "node": "Classify Email (LLM Chain)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify Email (LLM Chain)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify Email (LLM Chain)": {
+      "main": [
+        [
+          {
+            "node": "Validate & Extract Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate & Extract Category": {
+      "main": [
+        [
+          {
+            "node": "Route by Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route by Category": {
+      "main": [
+        [
+          {
+            "node": "Sales Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Support Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Complaint Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invoice Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Spam Route",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "General Route",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Support Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Complaint Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Invoice Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Spam Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "General Route": {
+      "main": [
+        [
+          {
+            "node": "Log Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Classification": {
+      "main": [
+        [
+          {
+            "node": "Send Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e0d91bcc-0c12-4a9c-bbbc-eb2651b76a03",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "BaiR04jCKW1Urnee",
+  "tags": []
+}
