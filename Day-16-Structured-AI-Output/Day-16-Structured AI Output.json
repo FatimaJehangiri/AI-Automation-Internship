@@ -1,0 +1,307 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c7725b5c-0f96-43e5-a5b2-600feaeec817",
+      "name": "‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "83e5d0ba-415b-452c-abd2-2b3654b555d3",
+              "name": "customer_message",
+              "value": "I ordered something last week and now I don't know if it arrived, but I was charged twice maybe. I need help, or maybe I should cancel. This whole thing is confusing.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "251908f0-77d6-4e86-bab9-9ff70e5830e3",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Analyze the following customer message:\n\n{{ $json.customer_message }}\n\nClassify the message according to the required JSON structure.",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        416,
+        -16
+      ],
+      "id": "58665994-a236-478c-bf29-6ccd4ffc0270",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        384,
+        208
+      ],
+      "id": "678a7de4-f7d8-489c-b13c-1435cb5fe95f",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "3F11lwo2shv7lAg7",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const requiredFields = [\n  'category',\n  'priority',\n  'sentiment',\n  'department',\n  'summary'\n];\n\nconst data = $json;\n\nlet isValid = true;\nlet errorMessage = '';\n\nfor (const field of requiredFields) {\n  if (\n    data[field] === undefined ||\n    data[field] === null ||\n    typeof data[field] !== 'string' ||\n    data[field].trim() === ''\n  ) {\n    isValid = false;\n    errorMessage = `Missing or invalid field: ${field}`;\n    break;\n  }\n}\n\nreturn [\n  {\n    json: {\n      ...data,\n      isValid,\n      errorMessage\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        48
+      ],
+      "id": "764bfc8c-92c6-41ae-b865-425e12b9715a",
+      "name": "Validate AI Output"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "0ef64a34-ee12-48a3-83ec-399a30a0c7db",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        16
+      ],
+      "id": "be0b6d45-1012-4081-aafd-575235c9f02c",
+      "name": "Is Output Valid?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1200,
+        -32
+      ],
+      "id": "accdace2-14cb-4fae-a7f9-647db5e6cdb3",
+      "name": "Valid Structured Output"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd69ac74-b656-44df-bd1d-20848a2c31ed",
+              "name": "category",
+              "value": "unknown",
+              "type": "string"
+            },
+            {
+              "id": "49707f33-b2ab-423a-a1a8-b3363a75954f",
+              "name": "priority",
+              "value": "medium",
+              "type": "string"
+            },
+            {
+              "id": "62e62cc6-c5b2-4a57-9bc1-e9b2af6e85b7",
+              "name": "sentiment",
+              "value": "neutral",
+              "type": "string"
+            },
+            {
+              "id": "cbd64abe-da79-4f1a-993d-e8c583aeda32",
+              "name": "department",
+              "value": "human_review",
+              "type": "string"
+            },
+            {
+              "id": "ea5af633-04fc-4e04-9fe0-140af3a6c5ba",
+              "name": "summary",
+              "value": "AI returned an invalid or incomplete response. Manual review required.",
+              "type": "string"
+            },
+            {
+              "id": "a7406ebb-7f82-460d-b5c4-c5acfc719424",
+              "name": "fallbackTriggered",
+              "value": "true",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1136,
+        96
+      ],
+      "id": "10b5de6e-6ffc-492e-a553-75dc2515af7e",
+      "name": "Fallback - Invalid AI Response"
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\"\n    },\n    \"priority\": {\n      \"type\": \"string\"\n    },\n    \"sentiment\": {\n      \"type\": \"string\"\n    },\n    \"department\": {\n      \"type\": \"string\"\n    },\n    \"summary\": {\n      \"type\": \"string\"\n    }\n  },\n  \"required\": [\n    \"category\",\n    \"priority\",\n    \"sentiment\",\n    \"department\",\n    \"summary\"\n  ],\n  \"additionalProperties\": false\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        192
+      ],
+      "id": "0b996190-c352-4ce9-9152-50a856b7a962",
+      "name": "Structured Output Parser1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Validate AI Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate AI Output": {
+      "main": [
+        [
+          {
+            "node": "Is Output Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Output Valid?": {
+      "main": [
+        [
+          {
+            "node": "Valid Structured Output",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fallback - Invalid AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser1": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "66e1a835-e277-4188-bf70-a1174cce66b0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "krh97tyCeQfGAucK",
+  "tags": []
+}
