@@ -1,0 +1,69 @@
+// Parse AI response
+const aiResponse = $input.first().json;
+
+// The AI might return the response in different formats
+let parsedResult = {};
+
+// Try to extract the JSON from the response
+try {
+  // Check if the response is already an object
+  if (typeof aiResponse === 'object' && aiResponse !== null) {
+    // Check if the response has the expected fields
+    if (aiResponse.category) {
+      parsedResult = aiResponse;
+    } else {
+      // The response might be nested
+      const text = aiResponse.text || aiResponse.output || aiResponse.response || JSON.stringify(aiResponse);
+      parsedResult = JSON.parse(text);
+    }
+  } else if (typeof aiResponse === 'string') {
+    // Try to parse the string as JSON
+    parsedResult = JSON.parse(aiResponse);
+  } else {
+    // Try to get the text content
+    const text = aiResponse.text || aiResponse.output || aiResponse.response || '';
+    if (text) {
+      parsedResult = JSON.parse(text);
+    }
+  }
+} catch (error) {
+  console.error('Failed to parse AI response:', error);
+  console.error('Raw response:', JSON.stringify(aiResponse));
+  
+  // Use fallback values
+  parsedResult = {
+    category: 'other',
+    priority: 'low',
+    sentiment: 'neutral',
+    department: 'Customer Service',
+    summary: 'Unable to parse AI response',
+    suggested_response: 'We will review your request and get back to you shortly.'
+  };
+}
+
+// Ensure all required fields exist
+const defaults = {
+  category: 'other',
+  priority: 'low',
+  sentiment: 'neutral',
+  department: 'Customer Service',
+  summary: 'No summary provided',
+  suggested_response: 'Thank you for your message. A support representative will contact you shortly.'
+};
+
+// Merge with defaults for missing fields
+const finalResult = { ...defaults, ...parsedResult };
+
+// Clean up the values
+finalResult.category = (finalResult.category || 'other').toLowerCase().trim();
+finalResult.priority = (finalResult.priority || 'low').toLowerCase().trim();
+finalResult.sentiment = (finalResult.sentiment || 'neutral').toLowerCase().trim();
+finalResult.department = finalResult.department || 'Customer Service';
+finalResult.summary = finalResult.summary || 'No summary provided';
+finalResult.suggested_response = finalResult.suggested_response || 'Thank you for your message.';
+
+// Log the final result
+console.log('=== Parsed Result ===');
+console.log(JSON.stringify(finalResult, null, 2));
+
+return [{ json: finalResult }];
