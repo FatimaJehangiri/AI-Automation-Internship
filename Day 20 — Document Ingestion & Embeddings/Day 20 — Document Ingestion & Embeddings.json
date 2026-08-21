@@ -1,0 +1,252 @@
+{
+  "name": "Day 20 — Document Ingestion & Embeddings",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "b5d713a5-83ce-42b8-8ba4-21a24e265992",
+      "name": "Run Ingestion",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -16
+      ],
+      "notesInFlow": true,
+      "notes": "Click 'Execute workflow' or use this trigger to test the pipeline manually."
+    },
+    {
+      "parameters": {
+        "jsCode": "// 12 knowledge-base entries simulating documents pulled from FAQ, help docs, and policy files\nconst entries = [\n  { id: 'kb-001', title: 'What is Petalnex?', category: 'Company', source: 'faq.md', content: 'Petalnex Pvt. Ltd. is an AI automation company that builds intelligent workflow solutions for businesses of all sizes.' },\n  { id: 'kb-002', title: 'Business Hours', category: 'Support', source: 'faq.md', content: 'Our support team is available Monday to Friday, 9 AM to 6 PM (PKT). Weekend requests are answered on the next business day.' },\n  { id: 'kb-003', title: 'How to reset your password', category: 'Account', source: 'help.txt', content: 'To reset your password, click \"Forgot Password\" on the login page, enter your registered email, and follow the link sent to your inbox.' },\n  { id: 'kb-004', title: 'Supported vector databases', category: 'Product', source: 'docs.md', content: 'Our platform supports Supabase Vector, Qdrant, and Pinecone as vector store backends. All three offer generous free tiers for prototyping.' },\n  { id: 'kb-005', title: 'What are embeddings?', category: 'Concepts', source: 'glossary.txt', content: 'Embeddings are numerical vector representations of text that capture semantic meaning, enabling similarity search and retrieval augmented generation.' },\n  { id: 'kb-006', title: 'Refund policy', category: 'Billing', source: 'policy.pdf', content: 'Customers may request a full refund within 14 days of purchase. Refunds are processed to the original payment method within 5 to 7 business days.' },\n  { id: 'kb-007', title: 'Data privacy commitment', category: 'Legal', source: 'policy.pdf', content: 'We never sell your data. All customer data is encrypted in transit and at rest, and we comply with GDPR and applicable data protection regulations.' },\n  { id: 'kb-008', title: 'How chunking works', category: 'Concepts', source: 'docs.md', content: 'Long documents are split into overlapping chunks before embedding so that each chunk fits the model context window and preserves surrounding context.' },\n  { id: 'kb-009', title: 'Integrations available', category: 'Product', source: 'docs.md', content: 'Petalnex integrates with Slack, Gmail, Google Sheets, Notion, and hundreds of other apps through the n8n automation platform.' },\n  { id: 'kb-010', title: 'Free trial details', category: 'Billing', source: 'faq.md', content: 'New users get a 14-day free trial with full access to all features. No credit card is required to start the trial.' },\n  { id: 'kb-011', title: 'Contact support', category: 'Support', source: 'faq.md', content: 'You can reach our support team by emailing support@petalnex.example or by opening a ticket from your account dashboard.' },\n  { id: 'kb-012', title: 'What is RAG?', category: 'Concepts', source: 'glossary.txt', content: 'Retrieval Augmented Generation (RAG) combines a vector search over your knowledge base with a language model so answers are grounded in your own documents.' },\n];\nreturn entries.map((e) => ({ json: e }));"
+      },
+      "id": "fa15419f-c7f2-4309-814c-cb53b3181236",
+      "name": "Load Knowledge Entries",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -16
+      ],
+      "notesInFlow": true,
+      "notes": "Simulates extracting content from FAQ/help/docs/policy sources (12 entries, exceeds the 10-minimum requirement)."
+    },
+    {
+      "parameters": {
+        "jsCode": "// Normalise/clean each entry's text before chunking + embedding\nreturn $input.all().map((item) => {\n  const raw = String(item.json.content || '');\n  const cleaned = raw\n    .replace(/\\r\\n/g, ' ')\n    .replace(/[\\u0000-\\u001F\\u007F]/g, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n  return {\n    json: {\n      ...item.json,\n      content: cleaned,\n      char_count: cleaned.length,\n    },\n  };\n});"
+      },
+      "id": "49ab90c8-1554-43b7-ad11-2fe4ff7d8583",
+      "name": "Clean Content",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        848,
+        -16
+      ],
+      "notesInFlow": true,
+      "notes": "Strips control characters, normalises whitespace, adds char_count for QA."
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "6f14f86a-99f5-4193-8ac8-7e728e3e26ff",
+      "name": "Store in Supabase",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        1072,
+        -16
+      ],
+      "notesInFlow": false,
+      "credentials": {
+        "supabaseApi": {
+          "id": "iwNK1JaYuRHOzDV5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "6f6d8a5e-f33e-40c3-b4ce-224bb7eb6b33",
+      "name": "Done",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1296,
+        -16
+      ],
+      "notesInFlow": true,
+      "notes": "Visual end marker — confirms the run completed. Good for your screenshot."
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.content }}",
+        "textSplittingMode": "custom",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "id",
+                "value": "={{ $json.id }}"
+              },
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.category }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $json.source }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "6a6b09ab-bf05-4191-8654-06bc60ee197b",
+      "name": "Document Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        1264,
+        160
+      ],
+      "notesInFlow": true,
+      "notes": "FIX: now explicitly embeds only the 'content' field (jsonData), keeping id/title/category/source as metadata instead of mixing them into the embedded text."
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "id": "61f1d09e-52be-44b6-b6e9-0e2fa347aaf8",
+      "name": "Split into Chunks",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        336
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        192
+      ],
+      "id": "6b059b5b-dd30-418c-8ab7-53f354680270",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "35WPMfcpMGGpHl3L",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Run Ingestion": {
+      "main": [
+        [
+          {
+            "node": "Load Knowledge Entries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Knowledge Entries": {
+      "main": [
+        [
+          {
+            "node": "Clean Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Content": {
+      "main": [
+        [
+          {
+            "node": "Store in Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Store in Supabase": {
+      "main": [
+        [
+          {
+            "node": "Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Document Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Store in Supabase",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split into Chunks": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Document Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Store in Supabase",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "b0285e9a-bf09-4714-8544-9de593261df5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "msn7LeSg4zNHeOaR",
+  "tags": []
+}

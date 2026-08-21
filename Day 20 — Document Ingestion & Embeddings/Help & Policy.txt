@@ -1,0 +1,15 @@
+PETALNEX HELP CENTER
+====================
+
+How to reset your password
+---------------------------
+To reset your password, click "Forgot Password" on the login page, enter your registered email, and follow the link sent to your inbox.
+
+Petalnex Pvt. Ltd. — Policies
+
+Refund Policy
+Customers may request a full refund within 14 days of purchase. Refunds are processed to the original
+payment method within 5 to 7 business days.
+Data Privacy Commitment
+We never sell your data. All customer data is encrypted in transit and at rest, and we comply with
+GDPR and applicable data protection regulations
