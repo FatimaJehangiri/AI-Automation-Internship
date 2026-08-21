@@ -1,0 +1,166 @@
+AI Customer Support Triage System
+📋 Overview
+This workflow automates the process of receiving, analyzing, and routing customer support requests. It uses an AI-powered triage system to categorize support tickets, determine priority levels, analyze sentiment, and automatically route them to the appropriate department.
+
+🎯 Purpose
+The system receives customer support messages via a webhook, processes them through an AI analysis pipeline, and performs the following actions:
+
+Validates incoming customer data
+
+Analyzes messages using AI (via Groq LLM)
+
+Categorizes support requests
+
+Assigns priority levels
+
+Detects sentiment
+
+Routes to appropriate departments
+
+Creates support tickets
+
+Stores data in Google Sheets
+
+Sends acknowledgment emails to customers
+
+Alerts support team for urgent issues
+
+🔧 Technology Stack
+Platform: n8n (Workflow Automation)
+
+AI Model: Groq (OpenAI GPT-Style Model)
+
+Database: Google Sheets
+
+Email Service: Gmail
+
+Language: JavaScript (Code nodes)
+
+📁 File Structure
+text
+AI Customer Support Triage System/
+├── workflow.json          # Complete workflow configuration
+├── README.md              # This documentation
+└── screenshots/
+    └── workflow.png       # Workflow visualization
+🔄 Workflow Steps
+1. Webhook Receiver
+Endpoint: customer-support-triage
+
+Method: POST
+
+Purpose: Receives customer support requests
+
+2. Customer Input Validation
+Type: Code Node
+
+Validates:
+
+Message is provided and not empty
+
+Customer name (defaults to "Unknown Customer")
+
+Customer email (optional)
+
+Adds timestamp
+
+3. AI Triage Analysis
+Type: AI Agent (LangChain)
+
+Model: Groq (OpenAI GPT-OSS 120B)
+
+Temperature: 0
+
+Functions:
+
+Categorizes message (billing, technical, account, general, other)
+
+Determines priority (low, medium, high, urgent)
+
+Analyzes sentiment (positive, neutral, negative, frustrated)
+
+Routes to department
+
+Generates summary (max 25 words)
+
+Creates suggested response
+
+4. Parse AI Response
+Type: Code Node
+
+Purpose: Extracts and validates AI response
+
+Fallback handling: Provides default values if parsing fails
+
+5. Prepare Support Ticket
+Type: Code Node
+
+Creates: Comprehensive ticket structure
+
+Generates: Unique ticket ID
+
+Maps: Category to department
+
+Adds: Routing notes
+
+6. Store in Google Sheets
+Type: Google Sheets
+
+Operation: Append row
+
+Stores: All ticket information
+
+7. Send Customer Acknowledgment
+Type: Gmail
+
+Includes:
+
+Ticket ID
+
+Issue summary
+
+Assigned department
+
+Priority level
+
+Suggested response
+
+8. Urgent Priority Check
+Type: IF Node
+
+Condition: Priority equals "urgent"
+
+Action: Triggers support alert
+
+9. Send Urgent Support Alert
+Type: Gmail
+
+Purpose: Notifies support team of urgent issues
+
+Includes: All ticket details for immediate action
+
+🚀 Setup Instructions
+Prerequisites
+n8n Instance (Cloud or Self-Hosted)
+
+Groq API Key
+
+Google Sheets Account
+
+Gmail Account
+
+ Category Mapping
+Category	Department	Routing Note
+billing	Billing	Assigned to Billing
+technical	Technical Support	Assigned to Technical Support
+account	Account Support	Assigned to Account Support
+general	Customer Service	Assigned to Customer Service
+other	Customer Service	Assigned for manual review
+
+
+⚡ Priority Levels
+Priority	Description	Action
+Urgent	Service disruption	Immediate alert via email
+High	Significant issues	High priority handling
+Medium	Normal requests	Standard processing
+Low	Minor issues	Low priority processing
