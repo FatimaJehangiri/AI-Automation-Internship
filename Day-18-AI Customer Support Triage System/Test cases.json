@@ -1,0 +1,11 @@
+[ 
+  { "customer_name": "Ali Ahmed", "customer_email": "ali@example.com", "message": "Your website keeps showing an error whenever I try to upload a document." },
+  { "customer_name": "Sara Khan", "customer_email": "sara@example.com", "message": "I was charged twice for my monthly subscription. Please refund the duplicate charge immediately." },
+  { "customer_name": "Hamza Malik", "customer_email": "hamza@example.com", "message": "I forgot my password and cannot log into my account. Can you help me reset it?" },
+  { "customer_name": "Ayesha Noor", "customer_email": "ayesha@example.com", "message": "Your service has been amazing! I just wanted to say thank you for the excellent support." },
+  { "customer_name": "Usman Ali", "customer_email": "usman@example.com", "message": "I have been unable to access my account for three days and need this fixed immediately." },
+  { "customer_name": "Fatima Shah", "customer_email": "fatima@example.com", "message": "The payment failed several times, but the amount appears to have been deducted from my bank account." }, 
+  { "customer_name": "Bilal Khan", "customer_email": "bilal@example.com", "message": "The dashboard is loading extremely slowly and sometimes stops responding completely." },
+  { "customer_name": "Hira Ahmed", "customer_email": "hira@example.com", "message": "Could you tell me what features are included in the Professional plan?" }, 
+  { "customer_name": "Saad Hassan", "customer_email": "saad@example.com", "message": "I cannot download my invoice from the billing section. The download button does nothing." }, 
+  { "customer_name": "Zainab Ali", "customer_email": "zainab@example.com", "message": "I really appreciate how quickly your team resolved my issue. Great service!" } ]
