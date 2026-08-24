@@ -1,0 +1,141 @@
+{
+  "name": "Day 22 - AI Agent with Knowledge Base and Memory",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "abc123",
+      "name": "When Chat Message Received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "day22-ai-agent-chat"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are a helpful AI assistant for Petalnex Pvt. Ltd. AI Automation Internship knowledge.\n\nYour job is to answer the user's questions accurately.\n\nRULES:\n1. Use the Knowledge Base Search tool when you need information from the knowledge base.\n2. Never invent facts, information, project details, or answers.\n3. If the answer is not available in the knowledge base, clearly say: \"I don't have enough information in my knowledge base to answer that accurately.\"\n4. If the user's question is unclear, ask a short clarifying question.\n5. Use conversation memory when the user refers to something mentioned earlier.\n6. Keep answers clear, concise, and professional.\n7. Do not pretend to have used a tool if you did not use it.\n\nYou have access to one knowledge base search tool and conversation memory."
+        }
+      },
+      "id": "123",
+      "name": "AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2,
+      "position": [
+        304,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "345",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "description": "Search the internship knowledge base for information about AI automation, n8n, RAG, structured output, customer support triage, workflows, AI agents, tools, memory, and previous internship topics. Use this tool when the user asks for information that may exist in the knowledge base.",
+        "jsCode": "const query =\n  $input.first().json.query ||\n  $input.first().json.input ||\n  \"\";\n\nconst knowledgeBase = [\n  {\n    topic: \"AI Agents\",\n    content:\n      \"An AI agent is a goal-driven system that can reason about a task, choose available tools, perform actions, observe results, and generate a response. An agent is not just a chatbot because it can have instructions, tools, memory, context, boundaries, and decision capability.\"\n  },\n  {\n    topic: \"Standard Workflow\",\n    content:\n      \"A standard workflow follows a fixed predefined sequence of steps. For example: Trigger, Validate Data, Process Data, Store Result, Send Notification. Unlike an AI agent, it does not dynamically choose tools based on a goal.\"\n  },\n  {\n    topic: \"AI Agent Tools\",\n    content:\n      \"Common AI agent tools include searching a knowledge base, reading Google Sheets, querying a database, calling an API, sending an email, and creating a support ticket.\"\n  },\n  {\n    topic: \"Memory\",\n    content:\n      \"Conversation memory allows an AI agent to retain relevant information from earlier turns in the same conversation. This helps the agent understand follow-up questions without requiring the user to repeat previous information.\"\n  },\n  {\n    topic: \"Structured AI Output\",\n    content:\n      \"Structured AI output makes an AI model return predictable data such as JSON. In the internship support triage project, the target fields included category, priority, sentiment, department, summary, and suggested response.\"\n  },\n  {\n    topic: \"Customer Support Triage\",\n    content:\n      \"The AI Customer Support Triage System receives a customer message and uses AI to determine category, priority, sentiment, department, summary, and suggested response. The workflow can then route the ticket and send notifications.\"\n  },\n  {\n    topic: \"RAG\",\n    content:\n      \"Retrieval-Augmented Generation, or RAG, allows an AI system to retrieve relevant information from external knowledge before generating an answer. A typical RAG process is Documents, Extraction, Chunking, Embeddings, Vector Database, Retrieval, and AI Response.\"\n  },\n  {\n    topic: \"Embeddings\",\n    content:\n      \"Embeddings are numerical representations of text that allow similar pieces of information to be found using semantic similarity. They are commonly used in vector databases for RAG systems.\"\n  },\n  {\n    topic: \"n8n AI Automation\",\n    content:\n      \"n8n can be used to build AI automation workflows by connecting triggers, AI models, agents, memory, APIs, databases, and other tools. AI Agent nodes can choose from connected tools based on their instructions and the user's request.\"\n  }\n];\n\nconst searchTerms = query\n  .toLowerCase()\n  .split(/\\s+/)\n  .filter(word => word.length > 2);\n\nconst results = knowledgeBase.filter(item => {\n  const searchableText =\n    `${item.topic} ${item.content}`.toLowerCase();\n\n  return searchTerms.some(term =>\n    searchableText.includes(term)\n  );\n});\n\nif (results.length === 0) {\n  return [\n    {\n      json: {\n        result:\n          \"No relevant information was found in the knowledge base.\"\n      }\n    }\n  ];\n}\n\nreturn [\n  {\n    json: {\n      result: results\n        .map(item => `${item.topic}: ${item.content}`)\n        .join(\"\\n\\n\")\n    }\n  }\n];"
+      },
+      "id": "678",
+      "name": "Knowledge Base Search",
+      "type": "@n8n/n8n-nodes-langchain.toolCode",
+      "typeVersion": 1.2,
+      "position": [
+        704,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        176,
+        208
+      ],
+      "id": "168",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "3F11lwo2shv7lAg7",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Chat Message Received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Knowledge Base Search": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "879fad52-a57d-43a5-af81-88b13c3aa2c3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "trf56"
+  },
+  "nodeGroups": [],
+  "id": "rg56",
+  "tags": []
+}
