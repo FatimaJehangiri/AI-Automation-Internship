@@ -1,0 +1,316 @@
+{
+  "name": "Day 23 — Multi-Tool Agent & MCP",
+  "nodes": [
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "1a0d58d7-bb04-4dbf-a994-82f76148fbd6",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "day23-multitool-agent",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are the Day 23 Multi-Tool Agent.\n\nYour job is to choose the smallest appropriate tool for the user's request.\n\nAVAILABLE TOOLS AND STRICT ROUTING:\n1. Public HTTP API — use only for public read-only API information such as weather. Do not use it for database writes.\n2. Data Store — use only to read/search the Day 23 demo data table. Never invent rows.\n3. Calculator — use for arithmetic. Do not calculate tool results yourself when the calculator is appropriate.\n4. MCP Remote Tools — use only when the request specifically needs a capability exposed by the configured remote MCP server.\n5. Sensitive Action / Human Review — this action is never autonomous. It must always go through the human approval step. If approval is denied, do not retry the sensitive action.\n\nBOUNDARIES:\n- Never perform a sensitive write/delete/send action without explicit human approval.\n- Prefer read-only tools when they can answer the request.\n- Do not call multiple tools when one tool is sufficient.\n- Do not invent API, database, or MCP results.\n- If a required tool is not configured, clearly tell the user what is missing.\n- Keep answers concise and state which tool was used when useful.\n\nExamples:\n- \"What is the weather in London?\" -> Public HTTP API.\n- \"Find employee Alice in the data store.\" -> Data Store.\n- \"Calculate 27*14.\" -> Calculator.\n- \"Use the remote MCP capability to ...\" -> MCP.\n- \"Create/send/update something sensitive.\" -> Human approval is required before the action."
+        }
+      },
+      "id": "5a36fb90-537d-402c-b398-4744a6daf4af",
+      "name": "Day 23 Multi-Tool Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        464,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "temperature": 0
+        }
+      },
+      "id": "ce852c7d-d1b0-4054-8f40-1f8dff130ce6",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        464,
+        272
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "3F11lwo2shv7lAg7",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $json.sessionId || 'day23-demo' }}",
+        "contextWindowLength": 10
+      },
+      "id": "c9074af3-7d95-4553-ae8d-85a87782ed31",
+      "name": "Simple Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "Use this read-only public API for current weather. Provide latitude and longitude. Do not use this tool for writes or sensitive actions.",
+        "url": "https://api.open-meteo.com/v1/forecast",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "latitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('latitude', 'Latitude, for example 33.6844', 'string') }}"
+            },
+            {
+              "name": "longitude",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('longitude', 'Longitude, for example 73.0479', 'string') }}"
+            },
+            {
+              "name": "current",
+              "value": "temperature_2m,relative_humidity_2m,wind_speed_10m"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "81348bc4-a2e9-460c-b14c-4cdd0dbe57c8",
+      "name": "Public Weather HTTP Tool",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        960,
+        528
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "32999654-0561-4ef4-8e1b-5666b1fa3780",
+      "name": "Calculator",
+      "type": "@n8n/n8n-nodes-langchain.toolCalculator",
+      "typeVersion": 1,
+      "position": [
+        1504,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://docs.n8n.io/~gitbook/mcp",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "c5f1c933-9136-4334-a8ae-2f33cf38f100",
+      "name": "Remote MCP Client Tool",
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.4,
+      "position": [
+        1536,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "toolDescription": "SENSITIVE ACTION. Creates a demo record by POST. This tool must only be executed after a human explicitly approves the action in the chat review step.",
+        "method": "POST",
+        "url": "https://jsonplaceholder.typicode.com/posts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({title: $fromAI('title', 'Title for the record', 'string'), body: $fromAI('body', 'Content for the record', 'string'), userId: 1}) }}",
+        "options": {}
+      },
+      "id": "8cabe6ea-9f76-4e3b-bcec-52a71170df75",
+      "name": "Sensitive Demo Write",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        1696,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "message": "The agent wants to perform a sensitive write action. Review the proposed action and approve or reject it before execution.",
+        "options": {}
+      },
+      "id": "fd65f9f5-4b09-4bc6-8a1c-5dc82357d6d2",
+      "name": "Human Approval Required",
+      "type": "@n8n/n8n-nodes-langchain.chatHitlTool",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        352
+      ],
+      "webhookId": "51952f57-c5dd-48e6-a0c1-c79ddc35138e"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1R3MIl8fiqwluCqAyvqtbmmefceJZPHib4ZOi35NmVW0",
+          "mode": "list",
+          "cachedResultName": "Day23_Employee_Data",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1R3MIl8fiqwluCqAyvqtbmmefceJZPHib4ZOi35NmVW0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1R3MIl8fiqwluCqAyvqtbmmefceJZPHib4ZOi35NmVW0/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        1200,
+        464
+      ],
+      "id": "c9e18cac-6519-4985-bc32-277256147789",
+      "name": "Get row(s) in sheet in Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Public Weather HTTP Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculator": {
+      "ai_tool": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remote MCP Client Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sensitive Demo Write": {
+      "ai_tool": [
+        [
+          {
+            "node": "Human Approval Required",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Human Approval Required": {
+      "ai_tool": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet in Google Sheets": {
+      "ai_tool": [
+        [
+          {
+            "node": "Day 23 Multi-Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "85a40349-d137-4c0a-ac5f-1f5a522612e8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "Do4EYtvYIhjcEEys",
+  "tags": []
+}
