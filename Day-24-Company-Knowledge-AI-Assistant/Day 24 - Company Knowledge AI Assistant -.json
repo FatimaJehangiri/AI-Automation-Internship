@@ -1,0 +1,387 @@
+{
+  "name": "Day 24 - Company Knowledge AI Assistant - Workflow 2 - RAG Assistant",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "33dd465a-7fb8-4218-8ae9-ab0565a70f44",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const knowledgeBase = [\n  {\n    title: 'Company Overview',\n    category: 'General',\n    source: 'Company Profile',\n    content: 'TechNova Solutions is a technology services company that provides AI automation, software development, cloud solutions, and business process optimization services to clients.'\n  },\n  {\n    title: 'Company Mission',\n    category: 'General',\n    source: 'Company Profile',\n    content: 'TechNova Solutions aims to help businesses reduce manual work and improve efficiency through practical artificial intelligence, automation, and modern software solutions.'\n  },\n  {\n    title: 'Working Hours',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Standard working hours are Monday through Friday from 9:00 AM to 5:00 PM Pakistan Standard Time.'\n  },\n  {\n    title: 'Remote Work Policy',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees may work remotely when their role allows it and when remote work has been approved by their manager.'\n  },\n  {\n    title: 'Leave Policy',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees must submit leave requests through the HR system and obtain approval from their manager before taking planned leave.'\n  },\n  {\n    title: 'Annual Leave',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Full-time employees receive 20 days of annual paid leave per calendar year.'\n  },\n  {\n    title: 'Sick Leave',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees receive 10 days of paid sick leave per calendar year. Employees should inform their manager as soon as possible when they are unable to work.'\n  },\n  {\n    title: 'Salary Payments',\n    category: 'Finance',\n    source: 'Finance Policy',\n    content: 'Employee salaries are processed monthly and paid by the fifth business day of each month.'\n  },\n  {\n    title: 'Expense Reimbursement',\n    category: 'Finance',\n    source: 'Finance Policy',\n    content: 'Business-related expenses must be submitted with valid receipts and approved by the employee manager before reimbursement.'\n  },\n  {\n    title: 'Information Security',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Employees must not share company passwords, API keys, authentication tokens, or confidential credentials with unauthorized individuals.'\n  },\n  {\n    title: 'Password Policy',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Employees must use strong passwords and enable multi-factor authentication on supported company systems.'\n  },\n  {\n    title: 'Customer Data',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Customer information must only be accessed when required for legitimate business purposes and must not be shared outside authorized systems.'\n  },\n  {\n    title: 'AI Automation Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company develops AI-powered automation workflows for lead management, customer support, document processing, reporting, and internal operations.'\n  },\n  {\n    title: 'Software Development Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company develops custom web applications, APIs, internal business systems, and software integrations.'\n  },\n  {\n    title: 'Cloud Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company provides cloud architecture, deployment, migration, and infrastructure optimization services.'\n  },\n  {\n    title: 'Support Response Time',\n    category: 'Customer Support',\n    source: 'Support Policy',\n    content: 'Standard customer support requests are reviewed within one business day.'\n  },\n  {\n    title: 'Urgent Support',\n    category: 'Customer Support',\n    source: 'Support Policy',\n    content: 'Critical service issues are prioritized immediately and escalated to the technical support team.'\n  },\n  {\n    title: 'Project Communication',\n    category: 'Projects',\n    source: 'Project Management Policy',\n    content: 'Project updates are shared with clients through approved communication channels and according to the agreed project communication schedule.'\n  },\n  {\n    title: 'Project Changes',\n    category: 'Projects',\n    source: 'Project Management Policy',\n    content: 'Requests that significantly change the agreed project scope must be reviewed and approved before additional work begins.'\n  },\n  {\n    title: 'Data Backup',\n    category: 'IT',\n    source: 'IT Policy',\n    content: 'Important company systems and business data are backed up regularly according to the organization backup procedures.'\n  },\n  {\n    title: 'Employee Equipment',\n    category: 'IT',\n    source: 'IT Policy',\n    content: 'Company equipment must be used responsibly and returned when an employee leaves the organization.'\n  },\n  {\n    title: 'Training and Development',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees are encouraged to participate in relevant training and professional development programs with manager approval.'\n  }\n];\n\nreturn knowledgeBase.map((entry, index) => ({\n  json: {\n    id: index + 1,\n    title: entry.title,\n    category: entry.category,\n    source: entry.source,\n    content: entry.content,\n    metadata: {\n      title: entry.title,\n      category: entry.category,\n      source: entry.source,\n      document_id: index + 1\n    }\n  }\n}));"
+      },
+      "id": "8b93eecd-cae9-4d71-bbdb-085f7153cc92",
+      "name": "Prepare Company Knowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.category }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $json.source }}"
+              },
+              {
+                "name": "document_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "1d561dc4-660e-40e0-ae0f-528c46476081",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        544,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 100,
+        "options": {}
+      },
+      "id": "4ff107c5-06d8-477b-9f98-aaa7aa7a8dcd",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        848,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "company_documents",
+          "cachedResultName": "company_documents"
+        },
+        "options": {
+          "queryName": "match_company_documents"
+        }
+      },
+      "id": "165c39b1-1483-45db-963e-848d5000342b",
+      "name": "Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        592,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "iwNK1JaYuRHOzDV5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const totalEntries = 22;\n\nreturn [\n  {\n    json: {\n      success: true,\n      message: 'Company knowledge ingestion completed successfully.',\n      total_knowledge_entries: totalEntries,\n      vector_table: 'company_documents',\n      status: 'completed'\n    }\n  }\n];"
+      },
+      "id": "f042caef-d8c2-4610-a76f-0e15bf431728",
+      "name": "Ingestion Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1024,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "64e2a6d8-2d5f-4791-9c41-019a89fb0d5a",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        624,
+        592
+      ],
+      "webhookId": "company-knowledge-chat"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "You are the Company Knowledge Assistant for TechNova Solutions.\n\nRules:\n1. Always call the \"search_company_knowledge\" tool first to look up relevant information before answering any company-related question.\n2. Base your answer strictly on the content returned by the tool. Never invent, guess, or assume information that isn't in the retrieved results.\n3. If the tool returns no relevant results, or the retrieved content does not actually answer the question, respond with exactly: \"I don't have that information in the company knowledge base. Please check with the relevant department or your manager.\" Do not try to answer from general knowledge instead.\n4. When you do answer using retrieved content, end your answer with the source in parentheses, using the category and title metadata, e.g. \"(Source: HR - Leave Policy)\".\n5. Keep answers concise, professional, and specific to what was retrieved.\n6. If the user asks something unrelated to the company (general chit-chat, unrelated trivia), politely explain you can only answer questions about TechNova Solutions using the company knowledge base."
+        }
+      },
+      "id": "67f1a9c9-bc61-4a77-98a0-b21bb98a472e",
+      "name": "Company Knowledge Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1024,
+        592
+      ]
+    },
+    {
+      "parameters": {
+        "contextWindowLength": 10
+      },
+      "id": "522b460b-faa5-408f-a8eb-58486a774fad",
+      "name": "Conversation Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        1136,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "search_company_knowledge",
+        "toolDescription": "Searches the TechNova Solutions company knowledge base, covering HR policies, finance, security, services, customer support, IT, and project management. Always use this tool before answering any company-related question, and use the returned category/title/source metadata to cite where the answer came from.",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "company_documents",
+          "cachedResultName": "company_documents"
+        },
+        "options": {
+          "queryName": "match_company_documents"
+        }
+      },
+      "id": "4198e0c3-107b-4643-b340-8448b5238794",
+      "name": "Company Knowledge Search Tool",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        848
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "iwNK1JaYuRHOzDV5",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "embed-english-v3.0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsCohere",
+      "typeVersion": 1,
+      "position": [
+        960,
+        240
+      ],
+      "id": "2621370e-020a-4ba0-8b9a-6a55715434cd",
+      "name": "Embeddings Cohere",
+      "credentials": {
+        "cohereApi": {
+          "id": "oerwff5mxcfCiHdT",
+          "name": "Cohere account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "embed-english-v3.0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsCohere",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1056
+      ],
+      "id": "403661c1-f0ed-4774-909c-4e4c871f666f",
+      "name": "Embeddings Cohere1",
+      "credentials": {
+        "cohereApi": {
+          "id": "oerwff5mxcfCiHdT",
+          "name": "Cohere account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        896,
+        800
+      ],
+      "id": "d91f8a29-dd06-49ac-b7a0-0b5192608356",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "3F11lwo2shv7lAg7",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Company Knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Company Knowledge": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Ingestion Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Company Knowledge Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Conversation Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Company Knowledge Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Company Knowledge Search Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "Company Knowledge Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Cohere": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Cohere1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Company Knowledge Search Tool",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Company Knowledge Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "5731eee8-31b5-407d-a541-063dc0772191",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "MacUJd9jhpSRL8TU",
+  "tags": []
+}
