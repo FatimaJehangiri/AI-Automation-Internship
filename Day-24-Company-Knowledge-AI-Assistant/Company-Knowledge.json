@@ -1,0 +1,150 @@
+const knowledgeBase = [
+  {
+    title: 'Company Overview',
+    category: 'General',
+    source: 'Company Profile',
+    content: 'TechNova Solutions is a technology services company that provides AI automation, software development, cloud solutions, and business process optimization services to clients.'
+  },
+  {
+    title: 'Company Mission',
+    category: 'General',
+    source: 'Company Profile',
+    content: 'TechNova Solutions aims to help businesses reduce manual work and improve efficiency through practical artificial intelligence, automation, and modern software solutions.'
+  },
+  {
+    title: 'Working Hours',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Standard working hours are Monday through Friday from 9:00 AM to 5:00 PM Pakistan Standard Time.'
+  },
+  {
+    title: 'Remote Work Policy',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Employees may work remotely when their role allows it and when remote work has been approved by their manager.'
+  },
+  {
+    title: 'Leave Policy',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Employees must submit leave requests through the HR system and obtain approval from their manager before taking planned leave.'
+  },
+  {
+    title: 'Annual Leave',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Full-time employees receive 20 days of annual paid leave per calendar year.'
+  },
+  {
+    title: 'Sick Leave',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Employees receive 10 days of paid sick leave per calendar year. Employees should inform their manager as soon as possible when they are unable to work.'
+  },
+  {
+    title: 'Salary Payments',
+    category: 'Finance',
+    source: 'Finance Policy',
+    content: 'Employee salaries are processed monthly and paid by the fifth business day of each month.'
+  },
+  {
+    title: 'Expense Reimbursement',
+    category: 'Finance',
+    source: 'Finance Policy',
+    content: 'Business-related expenses must be submitted with valid receipts and approved by the employee manager before reimbursement.'
+  },
+  {
+    title: 'Information Security',
+    category: 'Security',
+    source: 'Security Policy',
+    content: 'Employees must not share company passwords, API keys, authentication tokens, or confidential credentials with unauthorized individuals.'
+  },
+  {
+    title: 'Password Policy',
+    category: 'Security',
+    source: 'Security Policy',
+    content: 'Employees must use strong passwords and enable multi-factor authentication on supported company systems.'
+  },
+  {
+    title: 'Customer Data',
+    category: 'Security',
+    source: 'Security Policy',
+    content: 'Customer information must only be accessed when required for legitimate business purposes and must not be shared outside authorized systems.'
+  },
+  {
+    title: 'AI Automation Services',
+    category: 'Services',
+    source: 'Service Catalog',
+    content: 'The company develops AI-powered automation workflows for lead management, customer support, document processing, reporting, and internal operations.'
+  },
+  {
+    title: 'Software Development Services',
+    category: 'Services',
+    source: 'Service Catalog',
+    content: 'The company develops custom web applications, APIs, internal business systems, and software integrations.'
+  },
+  {
+    title: 'Cloud Services',
+    category: 'Services',
+    source: 'Service Catalog',
+    content: 'The company provides cloud architecture, deployment, migration, and infrastructure optimization services.'
+  },
+  {
+    title: 'Support Response Time',
+    category: 'Customer Support',
+    source: 'Support Policy',
+    content: 'Standard customer support requests are reviewed within one business day.'
+  },
+  {
+    title: 'Urgent Support',
+    category: 'Customer Support',
+    source: 'Support Policy',
+    content: 'Critical service issues are prioritized immediately and escalated to the technical support team.'
+  },
+  {
+    title: 'Project Communication',
+    category: 'Projects',
+    source: 'Project Management Policy',
+    content: 'Project updates are shared with clients through approved communication channels and according to the agreed project communication schedule.'
+  },
+  {
+    title: 'Project Changes',
+    category: 'Projects',
+    source: 'Project Management Policy',
+    content: 'Requests that significantly change the agreed project scope must be reviewed and approved before additional work begins.'
+  },
+  {
+    title: 'Data Backup',
+    category: 'IT',
+    source: 'IT Policy',
+    content: 'Important company systems and business data are backed up regularly according to the organization backup procedures.'
+  },
+  {
+    title: 'Employee Equipment',
+    category: 'IT',
+    source: 'IT Policy',
+    content: 'Company equipment must be used responsibly and returned when an employee leaves the organization.'
+  },
+  {
+    title: 'Training and Development',
+    category: 'HR',
+    source: 'Employee Handbook',
+    content: 'Employees are encouraged to participate in relevant training and professional development programs with manager approval.'
+  }
+];
+
+return knowledgeBase.map((entry, index) => ({
+  json: {
+    id: index + 1,
+    title: entry.title,
+    category: entry.category,
+    source: entry.source,
+    content: entry.content,
+    metadata: {
+      title: entry.title,
+      category: entry.category,
+      source: entry.source,
+      document_id: index + 1
+    }
+  }
+}));
