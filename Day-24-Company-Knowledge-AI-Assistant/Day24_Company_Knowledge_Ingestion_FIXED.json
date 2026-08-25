@@ -1,0 +1,197 @@
+{
+  "name": "Day 24 - Company Knowledge AI Assistant - Workflow 1 - Knowledge Ingestion",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000001",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [-1200, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "const knowledgeBase = [\n  {\n    title: 'Company Overview',\n    category: 'General',\n    source: 'Company Profile',\n    content: 'TechNova Solutions is a technology services company that provides AI automation, software development, cloud solutions, and business process optimization services to clients.'\n  },\n  {\n    title: 'Company Mission',\n    category: 'General',\n    source: 'Company Profile',\n    content: 'TechNova Solutions aims to help businesses reduce manual work and improve efficiency through practical artificial intelligence, automation, and modern software solutions.'\n  },\n  {\n    title: 'Working Hours',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Standard working hours are Monday through Friday from 9:00 AM to 5:00 PM Pakistan Standard Time.'\n  },\n  {\n    title: 'Remote Work Policy',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees may work remotely when their role allows it and when remote work has been approved by their manager.'\n  },\n  {\n    title: 'Leave Policy',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees must submit leave requests through the HR system and obtain approval from their manager before taking planned leave.'\n  },\n  {\n    title: 'Annual Leave',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Full-time employees receive 20 days of annual paid leave per calendar year.'\n  },\n  {\n    title: 'Sick Leave',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees receive 10 days of paid sick leave per calendar year. Employees should inform their manager as soon as possible when they are unable to work.'\n  },\n  {\n    title: 'Salary Payments',\n    category: 'Finance',\n    source: 'Finance Policy',\n    content: 'Employee salaries are processed monthly and paid by the fifth business day of each month.'\n  },\n  {\n    title: 'Expense Reimbursement',\n    category: 'Finance',\n    source: 'Finance Policy',\n    content: 'Business-related expenses must be submitted with valid receipts and approved by the employee manager before reimbursement.'\n  },\n  {\n    title: 'Information Security',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Employees must not share company passwords, API keys, authentication tokens, or confidential credentials with unauthorized individuals.'\n  },\n  {\n    title: 'Password Policy',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Employees must use strong passwords and enable multi-factor authentication on supported company systems.'\n  },\n  {\n    title: 'Customer Data',\n    category: 'Security',\n    source: 'Security Policy',\n    content: 'Customer information must only be accessed when required for legitimate business purposes and must not be shared outside authorized systems.'\n  },\n  {\n    title: 'AI Automation Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company develops AI-powered automation workflows for lead management, customer support, document processing, reporting, and internal operations.'\n  },\n  {\n    title: 'Software Development Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company develops custom web applications, APIs, internal business systems, and software integrations.'\n  },\n  {\n    title: 'Cloud Services',\n    category: 'Services',\n    source: 'Service Catalog',\n    content: 'The company provides cloud architecture, deployment, migration, and infrastructure optimization services.'\n  },\n  {\n    title: 'Support Response Time',\n    category: 'Customer Support',\n    source: 'Support Policy',\n    content: 'Standard customer support requests are reviewed within one business day.'\n  },\n  {\n    title: 'Urgent Support',\n    category: 'Customer Support',\n    source: 'Support Policy',\n    content: 'Critical service issues are prioritized immediately and escalated to the technical support team.'\n  },\n  {\n    title: 'Project Communication',\n    category: 'Projects',\n    source: 'Project Management Policy',\n    content: 'Project updates are shared with clients through approved communication channels and according to the agreed project communication schedule.'\n  },\n  {\n    title: 'Project Changes',\n    category: 'Projects',\n    source: 'Project Management Policy',\n    content: 'Requests that significantly change the agreed project scope must be reviewed and approved before additional work begins.'\n  },\n  {\n    title: 'Data Backup',\n    category: 'IT',\n    source: 'IT Policy',\n    content: 'Important company systems and business data are backed up regularly according to the organization backup procedures.'\n  },\n  {\n    title: 'Employee Equipment',\n    category: 'IT',\n    source: 'IT Policy',\n    content: 'Company equipment must be used responsibly and returned when an employee leaves the organization.'\n  },\n  {\n    title: 'Training and Development',\n    category: 'HR',\n    source: 'Employee Handbook',\n    content: 'Employees are encouraged to participate in relevant training and professional development programs with manager approval.'\n  }\n];\n\nreturn knowledgeBase.map((entry, index) => ({\n  json: {\n    id: index + 1,\n    title: entry.title,\n    category: entry.category,\n    source: entry.source,\n    content: entry.content,\n    metadata: {\n      title: entry.title,\n      category: entry.category,\n      source: entry.source,\n      document_id: index + 1\n    }\n  }\n}));"
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000002",
+      "name": "Prepare Company Knowledge",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-980, 300]
+    },
+    {
+      "parameters": {
+        "dataType": "json",
+        "jsonData": "={{ $json.content }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "title",
+                "value": "={{ $json.title }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.category }}"
+              },
+              {
+                "name": "source",
+                "value": "={{ $json.source }}"
+              },
+              {
+                "name": "document_id",
+                "value": "={{ $json.id }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000003",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [-520, 520]
+    },
+    {
+      "parameters": {
+        "chunkSize": 1000,
+        "chunkOverlap": 100
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000004",
+      "name": "Recursive Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [-300, 700]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "mode": "list",
+          "value": "company_documents",
+          "cachedResultName": "company_documents"
+        },
+        "options": {
+          "queryName": "match_company_documents"
+        }
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000005",
+      "name": "Supabase Vector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [-300, 300],
+      "credentials": {
+        "supabaseApi": {
+          "id": "REPLACE_WITH_YOUR_SUPABASE_CREDENTIAL_ID",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000006",
+      "name": "OpenAI Embeddings",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1,
+      "position": [0, 520],
+      "credentials": {
+        "openAiApi": {
+          "id": "REPLACE_WITH_YOUR_OPENAI_CREDENTIAL_ID",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const totalEntries = 22;\n\nreturn [\n  {\n    json: {\n      success: true,\n      message: 'Company knowledge ingestion completed successfully.',\n      total_knowledge_entries: totalEntries,\n      vector_table: 'company_documents',\n      status: 'completed'\n    }\n  }\n];"
+      },
+      "id": "c1a7e8d1-1a11-4c01-9001-000000000007",
+      "name": "Ingestion Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [20, 300]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Prepare Company Knowledge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Company Knowledge": {
+      "main": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Embeddings": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Supabase Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Vector Store": {
+      "main": [
+        [
+          {
+            "node": "Ingestion Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "c1a7e8d1-1a11-4c01-9001-000000000100",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
