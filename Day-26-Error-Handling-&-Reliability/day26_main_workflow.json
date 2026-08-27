@@ -1,0 +1,176 @@
+{
+  "name": "Day 26 - Error Handling Demo",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [240, 320],
+      "parameters": {}
+    },
+    {
+      "id": "2",
+      "name": "API Request",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [480, 320],
+      "notes": "Deliberately calling httpstat.us/500 to force a failure for testing. Replace with your real API URL once verified.",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "url": "https://httpstat.us/500",
+        "method": "GET",
+        "options": {
+          "timeout": 5000
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Continue - Success",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [740, 200],
+      "parameters": {}
+    },
+    {
+      "id": "4",
+      "name": "Log Error",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [740, 440],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "workflow_name",
+              "type": "string",
+              "value": "Day 26 - Error Handling Demo"
+            },
+            {
+              "id": "a2",
+              "name": "failed_node",
+              "type": "string",
+              "value": "API Request"
+            },
+            {
+              "id": "a3",
+              "name": "error_message",
+              "type": "string",
+              "value": "={{ $json.error?.message || 'Unknown error' }}"
+            },
+            {
+              "id": "a4",
+              "name": "status_code",
+              "type": "string",
+              "value": "={{ $json.error?.httpCode || 'N/A' }}"
+            },
+            {
+              "id": "a5",
+              "name": "logged_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "5",
+      "name": "Log Error to Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [980, 440],
+      "notes": "Requires an error_logs table (see README for CREATE TABLE statement). Uses the same Postgres credential from Day 25.",
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "value": "error_logs",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_name": "={{ $json.workflow_name }}",
+            "failed_node": "={{ $json.failed_node }}",
+            "error_message": "={{ $json.error_message }}",
+            "status_code": "={{ $json.status_code }}",
+            "logged_at": "={{ $json.logged_at }}"
+          }
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "6",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [1220, 440],
+      "notes": "Fill in your own SMTP/Email credential. Slack or Telegram nodes work as drop-in replacements.",
+      "parameters": {
+        "fromEmail": "alerts@yourdomain.com",
+        "toEmail": "admin@yourdomain.com",
+        "subject": "=Workflow Failure: {{ $json.workflow_name }}",
+        "emailFormat": "text",
+        "text": "=A workflow failure was detected.\n\nWorkflow: {{ $json.workflow_name }}\nFailed Node: {{ $json.failed_node }}\nError: {{ $json.error_message }}\nStatus Code: {{ $json.status_code }}\nTime: {{ $json.logged_at }}"
+      },
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          { "node": "API Request", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "API Request": {
+      "main": [
+        [
+          { "node": "Continue - Success", "type": "main", "index": 0 }
+        ],
+        [
+          { "node": "Log Error", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Log Error": {
+      "main": [
+        [
+          { "node": "Log Error to Supabase", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Log Error to Supabase": {
+      "main": [
+        [
+          { "node": "Notify Admin", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "errorWorkflow": "SET_THIS_TO_YOUR_ERROR_WORKFLOW_ID"
+  },
+  "active": false
+}

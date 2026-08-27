@@ -1,0 +1,138 @@
+{
+  "name": "Day 26 - Error Workflow (Logger + Notifier)",
+  "nodes": [
+    {
+      "id": "1",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "parameters": {}
+    },
+    {
+      "id": "2",
+      "name": "Format Error Details",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [480, 300],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b1",
+              "name": "workflow_name",
+              "type": "string",
+              "value": "={{ $json.workflow?.name || 'Unknown workflow' }}"
+            },
+            {
+              "id": "b2",
+              "name": "failed_node",
+              "type": "string",
+              "value": "={{ $json.execution?.lastNodeExecuted || 'Unknown node' }}"
+            },
+            {
+              "id": "b3",
+              "name": "error_message",
+              "type": "string",
+              "value": "={{ $json.execution?.error?.message || 'Unknown error' }}"
+            },
+            {
+              "id": "b4",
+              "name": "execution_id",
+              "type": "string",
+              "value": "={{ $json.execution?.id }}"
+            },
+            {
+              "id": "b5",
+              "name": "logged_at",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "3",
+      "name": "Log Error to Supabase",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [720, 300],
+      "notes": "Requires an error_logs table (see README for CREATE TABLE statement). Uses the same Postgres credential from Day 25.",
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "value": "error_logs",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "workflow_name": "={{ $json.workflow_name }}",
+            "failed_node": "={{ $json.failed_node }}",
+            "error_message": "={{ $json.error_message }}",
+            "status_code": "={{ $json.execution_id }}",
+            "logged_at": "={{ $json.logged_at }}"
+          }
+        }
+      },
+      "credentials": {
+        "postgres": {
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "id": "4",
+      "name": "Notify Admin",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [960, 300],
+      "notes": "Fill in your own SMTP/Email credential. Slack or Telegram nodes work as drop-in replacements.",
+      "parameters": {
+        "fromEmail": "alerts@yourdomain.com",
+        "toEmail": "admin@yourdomain.com",
+        "subject": "=[ALERT] Workflow Failed: {{ $json.workflow_name }}",
+        "emailFormat": "text",
+        "text": "=A workflow execution failed and was caught by the global Error Workflow.\n\nWorkflow: {{ $json.workflow_name }}\nFailed Node: {{ $json.failed_node }}\nError: {{ $json.error_message }}\nExecution ID: {{ $json.execution_id }}\nTime: {{ $json.logged_at }}"
+      },
+      "credentials": {
+        "smtp": {
+          "name": "SMTP account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          { "node": "Format Error Details", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Format Error Details": {
+      "main": [
+        [
+          { "node": "Log Error to Supabase", "type": "main", "index": 0 }
+        ]
+      ]
+    },
+    "Log Error to Supabase": {
+      "main": [
+        [
+          { "node": "Notify Admin", "type": "main", "index": 0 }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": true
+}
