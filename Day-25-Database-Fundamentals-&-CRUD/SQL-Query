@@ -1,0 +1,10 @@
+CREATE TABLE IF NOT EXISTS tickets (
+    ticket_id BIGSERIAL PRIMARY KEY,
+    customer_name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    category VARCHAR(100),
+    priority VARCHAR(50),
+    status VARCHAR(50) DEFAULT 'Open',
+    ai_summary TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
