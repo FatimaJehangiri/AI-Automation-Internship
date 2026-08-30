@@ -1,0 +1,357 @@
+{
+  "name": "Day 28 — Human-in-the-Loop Customer Support",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "customer-support-triage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -64,
+        16
+      ],
+      "id": "f93794dc-a3a6-4e10-a3a9-7a4e5be3248b",
+      "name": "Webhook",
+      "webhookId": "134789da-cde3-4c49-9435-95168362e163"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json.body || $input.first().json;\n\nif (!data.message || typeof data.message !== 'string' || data.message.trim() === '') {\n  throw new Error('Customer message is required.');\n}\n\nreturn [\n  {\n    json: {\n      customer_name: data.customer_name || 'Unknown Customer',\n      customer_email: data.customer_email || '',\n      message: data.message.trim(),\n      received_at: new Date().toISOString()\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        16
+      ],
+      "id": "5e38adb6-b476-4867-aa23-fe6980193ee1",
+      "name": "Validate Customer Input"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an AI customer support triage assistant.\n\nAnalyze the following customer message:\n\nCustomer Name:\n{{ $json.customer_name }}\n\nCustomer Email:\n{{ $json.customer_email }}\n\nCustomer Message:\n{{ $json.message }}\n\nClassify the message according to the following rules:\n\ncategory:\n- billing\n- technical\n- account\n- general\n- other\n\npriority:\n- low\n- medium\n- high\n\nUse \"high\" for urgent issues, serious technical problems, incorrect charges, account access problems, security concerns, or messages explicitly requesting urgent assistance.\n\nsentiment:\n- positive\n- neutral\n- frustrated\n- negative\n\ndepartment:\n- Billing\n- Technical Support\n- Account Support\n- Customer Service\n- Other\n\nReturn ONLY valid JSON in this exact format:\n\n{\n  \"category\": \"billing\",\n  \"priority\": \"high\",\n  \"sentiment\": \"frustrated\",\n  \"department\": \"Billing\",\n  \"summary\": \"Short summary of the customer issue.\",\n  \"suggested_response\": \"Professional response to the customer.\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        272,
+        16
+      ],
+      "id": "8642a0b2-4b12-4f55-80b2-78678d873d8b",
+      "name": "AI Support Triage Analysis"
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-120b",
+        "options": {
+          "maxTokensToSample": 4096,
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        272,
+        208
+      ],
+      "id": "d8ce34d8-45a9-43ce-ae58-5af8d6bf183e",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "yiNjv5E55lCRChDP",
+          "name": "Groq account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiResult = $input.first().json;\n\n// Debug the AI result\nconsole.log('AI Result in Prepare Ticket:', JSON.stringify(aiResult, null, 2));\n\n// Direct mapping from category to department\nconst categoryToDepartment = {\n  'billing': 'Billing',\n  'technical': 'Technical Support',\n  'account': 'Account Support',\n  'general': 'Customer Service',\n  'other': 'Customer Service'\n};\n\nconst categoryToRouting = {\n  'billing': 'Assigned to Billing',\n  'technical': 'Assigned to Technical Support',\n  'account': 'Assigned to Account Support',\n  'general': 'Assigned to Customer Service',\n  'other': 'Assigned for manual review'\n};\n\nconst category = (aiResult.category || 'other').toLowerCase().trim();\nconst department = categoryToDepartment[category] || 'Customer Service';\nconst routing_note = categoryToRouting[category] || 'Assigned for manual review';\n\nconst customerData = $('Validate Customer Input').first().json;\n\nreturn [{\n  json: {\n    ticket_id: 'TICKET-' + Date.now(),\n    customer_name: customerData.customer_name || 'Unknown Customer',\n    customer_email: customerData.customer_email || 'no-email@example.com',\n    customer_message: customerData.message || 'No message provided',\n    received_at: customerData.received_at || new Date().toISOString(),\n    category: category,\n    priority: aiResult.priority || 'low',\n    sentiment: aiResult.sentiment || 'neutral',\n    department: department,\n    summary: aiResult.summary || 'No summary provided',\n    suggested_response: aiResult.suggested_response || 'Thank you for your message.',\n    status: 'Open',\n    routing_note: routing_note\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        320
+      ],
+      "id": "0e312d70-a3df-4928-943e-9dd723426985",
+      "name": "Prepare Support Ticket"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.customer_email }}",
+        "subject": "=We Received Your Support Request – {{ $json.ticket_id }}",
+        "message": "=Hello {{ $json.customer_name }},  Thank you for contacting our support team. We have received your request and created ticket {{ $json.ticket_id }}.  Issue Summary: {{ $json.summary }}  Your request has been assigned to the {{ $json.department }} team.  {{ $json.suggested_response }}  Priority: {{ $json.priority }}  Best regards, Customer Support Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        304
+      ],
+      "id": "06d5c30f-e135-4eae-a55b-fd16b506a671",
+      "name": "Send Customer Acknowledgment",
+      "webhookId": "4e2e1f6b-6db2-44cf-9038-f74c786f07c8",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "ema664130@gmail.com",
+        "subject": "=URGENT: {{ $json.ticket_id }} Requires Immediate Attention",
+        "message": "=An urgent customer support ticket requires immediate attention.  Ticket ID: {{ $json.ticket_id }} Customer: {{ $json.customer_name }} Email: {{ $json.customer_email }}  Category: {{ $json.category }} Priority: {{ $json.priority }} Sentiment: {{ $json.sentiment }} Department: {{ $json.department }}  Customer Message: {{ $json.customer_message }}  Summary: {{ $json.summary }}  Suggested Response: {{ $json.suggested_response }}  Please review and take appropriate action.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        96
+      ],
+      "id": "814ce1c5-0ecb-4c67-910a-5fe915875585",
+      "name": "Send Urgent Support Alert",
+      "webhookId": "00ec4e66-190b-437e-a2e5-8097a5c1e901",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse AI response\nconst aiResponse = $input.first().json;\n\n// The AI might return the response in different formats\nlet parsedResult = {};\n\n// Try to extract the JSON from the response\ntry {\n  // Check if the response is already an object\n  if (typeof aiResponse === 'object' && aiResponse !== null) {\n    // Check if the response has the expected fields\n    if (aiResponse.category) {\n      parsedResult = aiResponse;\n    } else {\n      // The response might be nested\n      const text = aiResponse.text || aiResponse.output || aiResponse.response || JSON.stringify(aiResponse);\n      parsedResult = JSON.parse(text);\n    }\n  } else if (typeof aiResponse === 'string') {\n    // Try to parse the string as JSON\n    parsedResult = JSON.parse(aiResponse);\n  } else {\n    // Try to get the text content\n    const text = aiResponse.text || aiResponse.output || aiResponse.response || '';\n    if (text) {\n      parsedResult = JSON.parse(text);\n    }\n  }\n} catch (error) {\n  console.error('Failed to parse AI response:', error);\n  console.error('Raw response:', JSON.stringify(aiResponse));\n  \n  // Use fallback values\n  parsedResult = {\n    category: 'other',\n    priority: 'low',\n    sentiment: 'neutral',\n    department: 'Customer Service',\n    summary: 'Unable to parse AI response',\n    suggested_response: 'We will review your request and get back to you shortly.'\n  };\n}\n\n// Ensure all required fields exist\nconst defaults = {\n  category: 'other',\n  priority: 'low',\n  sentiment: 'neutral',\n  department: 'Customer Service',\n  summary: 'No summary provided',\n  suggested_response: 'Thank you for your message. A support representative will contact you shortly.'\n};\n\n// Merge with defaults for missing fields\nconst finalResult = { ...defaults, ...parsedResult };\n\n// Clean up the values\nfinalResult.category = (finalResult.category || 'other').toLowerCase().trim();\nfinalResult.priority = (finalResult.priority || 'low').toLowerCase().trim();\nfinalResult.sentiment = (finalResult.sentiment || 'neutral').toLowerCase().trim();\nfinalResult.department = finalResult.department || 'Customer Service';\nfinalResult.summary = finalResult.summary || 'No summary provided';\nfinalResult.suggested_response = finalResult.suggested_response || 'Thank you for your message.';\n\n// Log the final result\nconsole.log('=== Parsed Result ===');\nconsole.log(JSON.stringify(finalResult, null, 2));\n\nreturn [{ json: finalResult }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        208
+      ],
+      "id": "8375c754-68e2-4f53-934f-5304a490dd1a",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "a4b84cec-fcd3-413b-88af-48c1a2cf9493",
+              "leftValue": "={{ $json.priority }}",
+              "rightValue": "high",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        704,
+        192
+      ],
+      "id": "8311de1f-d386-4b83-8bd3-292eb01cc820",
+      "name": "IF — High Priority?"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        816,
+        -32
+      ],
+      "id": "1a5d93e2-b594-4743-80e3-d74381ab77a4",
+      "name": "Wait — Human Approval",
+      "webhookId": "2f1ba17b-3501-4c15-a638-fc6fe658109b"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fddae811-f543-4b26-8dea-476dc2546a4e",
+              "leftValue": "={{ $json.approval }}",
+              "rightValue": "approved",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        992,
+        -16
+      ],
+      "id": "8fc19c0d-4f45-40fd-8674-3e5fcbd21cd2",
+      "name": "IF — Human Approved?"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Validate Customer Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Customer Input": {
+      "main": [
+        [
+          {
+            "node": "AI Support Triage Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Support Triage Analysis",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Support Triage Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Support Ticket": {
+      "main": [
+        [
+          {
+            "node": "Send Customer Acknowledgment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Customer Acknowledgment": {
+      "main": [
+        []
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "IF — High Priority?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — High Priority?": {
+      "main": [
+        [
+          {
+            "node": "Wait — Human Approval",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait — Human Approval": {
+      "main": [
+        [
+          {
+            "node": "IF — Human Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — Human Approved?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Support Ticket",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Urgent Support Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1d983827-5ac6-4f99-82c2-2b9f6164eb1a",
+  "meta": {
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "LzasyDJ6t2MHMVEM",
+  "tags": []
+}
