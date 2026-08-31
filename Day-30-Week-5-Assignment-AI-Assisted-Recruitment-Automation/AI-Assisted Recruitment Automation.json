@@ -1,0 +1,1102 @@
+{
+  "name": "AI-Assisted Recruitment Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "candidate-application",
+        "options": {}
+      },
+      "id": "7e78f5f1-a847-41e2-814e-51283d1a9a4c",
+      "name": "1. Application Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2880,
+        128
+      ],
+      "webhookId": "candidate-application-intake"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "n1",
+              "name": "candidateId",
+              "type": "string",
+              "value": "={{ $now.toMillis() }}-{{ $json.body.email.split('@')[0] }}"
+            },
+            {
+              "id": "n2",
+              "name": "name",
+              "type": "string",
+              "value": "={{ $json.body.name }}"
+            },
+            {
+              "id": "n3",
+              "name": "email",
+              "type": "string",
+              "value": "={{ $json.body.email }}"
+            },
+            {
+              "id": "n4",
+              "name": "phone",
+              "type": "string",
+              "value": "={{ $json.body.phone }}"
+            },
+            {
+              "id": "n5",
+              "name": "jobRole",
+              "type": "string",
+              "value": "={{ $json.body.jobRole }}"
+            },
+            {
+              "id": "n6",
+              "name": "resumeBase64",
+              "type": "string",
+              "value": "={{ $json.body.resumeBase64 || '' }}"
+            },
+            {
+              "id": "n7",
+              "name": "resumeText",
+              "type": "string",
+              "value": "={{ $json.body.resumeText || '' }}"
+            },
+            {
+              "id": "n8",
+              "name": "appliedAt",
+              "type": "string",
+              "value": "={{ $now.toISO() }}"
+            },
+            {
+              "id": "n9",
+              "name": "status",
+              "type": "string",
+              "value": "Received"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "8e697a4f-0d18-4b64-8041-138dbad7472f",
+      "name": "2. Store Candidate Data",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2640,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "candidateId",
+              "displayName": "candidateId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "jobRole",
+              "displayName": "jobRole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "appliedAt",
+              "displayName": "appliedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "finalScore",
+              "displayName": "finalScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decisionBy",
+              "displayName": "decisionBy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decidedAt",
+              "displayName": "decidedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resumeBase64",
+              "displayName": "resumeBase64",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resumeText",
+              "displayName": "resumeText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "e78812ef-c60e-4eb1-85ab-8d28d0034839",
+      "name": "3. Save to Candidate Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -2400,
+        128
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "hasfile",
+              "leftValue": "={{ $json.resumeBase64 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b8798953-4838-441e-8180-ab420b816f2f",
+      "name": "4. Resume File Attached?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -2160,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "cbc02542-b01a-4c7f-85ad-9723435a4cfc",
+      "name": "5a. Convert Base64 to Binary",
+      "type": "n8n-nodes-base.moveBinaryData",
+      "typeVersion": 1.1,
+      "position": [
+        -1920,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "7b96e3fa-7895-4187-9560-13add7438b1c",
+      "name": "5b. Extract Text From Resume PDF",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        -1680,
+        32
+      ],
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 6. Extract Candidate Information (rule-based pre-processing)\nconst item = $input.first().json;\nconst rawText = item.text || item.resumeText || '';\n\nfunction extractYearsExperience(text) {\n  const matches = text.match(/(\\d+)\\+?\\s*(years|yrs)\\s*(of)?\\s*experience/i);\n  return matches ? parseInt(matches[1]) : null;\n}\n\nfunction extractEducation(text) {\n  const degrees = ['PhD','Master','MSc','MS','Bachelor','BSc','BS','BBA','MBA','Diploma'];\n  const found = degrees.filter(d => new RegExp(d, 'i').test(text));\n  return found.length ? found.join(', ') : 'Not specified';\n}\n\nfunction extractContact(text) {\n  const emailMatch = text.match(/[\\w.+-]+@[\\w-]+\\.[\\w.-]+/);\n  const phoneMatch = text.match(/(\\+?\\d[\\d\\s-]{7,}\\d)/);\n  return {\n    email: emailMatch ? emailMatch[0] : null,\n    phone: phoneMatch ? phoneMatch[0] : null\n  };\n}\n\nreturn [{\n  json: {\n    ...($items('2. Store Candidate Data')[0]?.json || {}),\n    resumeRawText: rawText.slice(0, 8000),\n    extractedYearsExperience: extractYearsExperience(rawText),\n    extractedEducation: extractEducation(rawText),\n    extractedContact: extractContact(rawText)\n  }\n}];"
+      },
+      "id": "29c8308f-0e78-48fa-88e4-622dd5cb90eb",
+      "name": "6. Extract Candidate Information",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1424,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// 8. Rule-Based + AI Assessment merge\nconst stored = $('2. Store Candidate Data').first().json;\nconst extracted = $('6. Extract Candidate Information').first().json;\nlet ai;\ntry {\n  const raw = $input.first().json.choices?.[0]?.message?.content || '{}';\n  ai = typeof raw === 'string' ? JSON.parse(raw) : raw;\n} catch (e) {\n  ai = { skills: [], aiScore: 0, aiRecommendation: 'Review Further', reason: 'AI response could not be parsed; flagged for manual review.', strengths: [], gaps: [] };\n}\n\n// --- Rule-based scoring (business rules layered on top of AI) ---\nlet ruleScore = 0;\nconst requiredSkills = ['communication']; // customize per role, or pull from a config sheet\nconst yearsExp = ai.yearsExperience ?? extracted.extractedYearsExperience ?? 0;\n\nif (yearsExp >= 5) ruleScore += 30;\nelse if (yearsExp >= 2) ruleScore += 20;\nelse if (yearsExp >= 1) ruleScore += 10;\n\nconst skillsLower = (ai.skills || []).map(s => String(s).toLowerCase());\nconst matchedRequired = requiredSkills.filter(rs => skillsLower.some(s => s.includes(rs)));\nruleScore += matchedRequired.length * 10;\n\nif (extracted.extractedEducation && extracted.extractedEducation !== 'Not specified') ruleScore += 10;\n\nruleScore = Math.min(ruleScore, 50); // rule engine caps at 50\n\n// --- Weighted combined score: 70% AI, 30% rule engine ---\nconst aiScore = Number(ai.aiScore) || 0;\nconst finalScore = Math.round((aiScore * 0.7) + (ruleScore * (100/50) * 0.3));\n\nlet recommendation = 'Review Further';\nif (finalScore >= 75) recommendation = 'Shortlist';\nelse if (finalScore < 40) recommendation = 'Reject';\n\nreturn [{\n  json: {\n    candidate: {\n      candidateId: stored.candidateId,\n      name: stored.name,\n      email: stored.email,\n      phone: stored.phone,\n      jobRole: stored.jobRole\n    },\n    skills: ai.skills || [],\n    score: finalScore,\n    aiScore: aiScore,\n    ruleScore: ruleScore,\n    recommendation: recommendation,\n    aiRecommendation: ai.aiRecommendation || 'Review Further',\n    reason: ai.reason || 'No reason provided by AI.',\n    strengths: ai.strengths || [],\n    gaps: ai.gaps || []\n  }\n}];"
+      },
+      "id": "b609bd32-b0c1-4bbc-9222-d5f1833ffb8f",
+      "name": "8. Rule-Based + AI Assessment",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -960,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "ema664130@gmail.com",
+        "subject": "=Human Review Needed: {{ $json.candidate.name }} — {{ $json.candidate.jobRole }} (AI score: {{ $json.score }})",
+        "message": "=<h2>Candidate Review Required</h2>\n<p><b>Name:</b> {{ $json.candidate.name }}<br>\n<b>Role Applied:</b> {{ $json.candidate.jobRole }}<br>\n<b>Email:</b> {{ $json.candidate.email }}</p>\n<p><b>AI Score:</b> {{ $json.score }}/100<br>\n<b>Skills:</b> {{ $json.skills.join(', ') }}<br>\n<b>AI Recommendation:</b> {{ $json.aiRecommendation }}<br>\n<b>Reason:</b> {{ $json.reason }}</p>\n<p><b>Strengths:</b> {{ $json.strengths.join(', ') }}<br>\n<b>Gaps:</b> {{ $json.gaps.join(', ') }}</p>\n<p>This is an AI-generated assessment only. Please make the final call:</p>\n<p>\n<a href=\"{{ $execution.resumeUrl }}?decision=shortlist\" style=\"padding:10px 20px;background:#2ecc71;color:white;text-decoration:none;border-radius:4px;\">✅ Shortlist</a>\n&nbsp;&nbsp;\n<a href=\"{{ $execution.resumeUrl }}?decision=reject\" style=\"padding:10px 20px;background:#e74c3c;color:white;text-decoration:none;border-radius:4px;\">❌ Reject</a>\n</p>",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "de85d896-8c4b-4c1c-ae76-ed3343a6389d",
+      "name": "9. Send Review Request to Recruiter",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        128
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "webhookId": "904aa2be-364d-4930-b5ad-a482d8aaf248",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "options": {}
+      },
+      "id": "9fdc55d8-ed63-40e0-a2b1-f0d117be415d",
+      "name": "10. Wait for Human Decision",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -480,
+        128
+      ],
+      "webhookId": "human-approval-resume"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "decision-check",
+              "leftValue": "={{ $json.query.decision || $json.body.decision }}",
+              "rightValue": "shortlist",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "bc567988-906c-4546-9d84-4fec0b1f3d72",
+      "name": "11. Shortlist or Reject?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -240,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('8. Rule-Based + AI Assessment').item.json.candidate.email }}",
+        "subject": "=Great news about your application — {{ $('8. Rule-Based + AI Assessment').item.json.candidate.jobRole }}",
+        "message": "=<p>Dear {{ $('8. Rule-Based + AI Assessment').item.json.candidate.name }},</p>\n<p>Thank you for applying for the <b>{{ $('8. Rule-Based + AI Assessment').item.json.candidate.jobRole }}</b> position. We're pleased to let you know that you've been <b>shortlisted</b> to move forward in our hiring process. Our team will reach out shortly to schedule the next step.</p>\n<p>Best regards,<br>Recruitment Team</p>",
+        "options": {}
+      },
+      "id": "128aa2c8-9df3-4f42-a143-7ba8d905d3e4",
+      "name": "12a. Send Shortlist Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "webhookId": "ccbe6643-b34a-4bc5-9acf-f086b56344b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('8. Rule-Based + AI Assessment').item.json.candidate.email }}",
+        "subject": "=Update on your application — {{ $('8. Rule-Based + AI Assessment').item.json.candidate.jobRole }}",
+        "message": "=<p>Dear {{ $('8. Rule-Based + AI Assessment').item.json.candidate.name }},</p>\n<p>Thank you for taking the time to apply for the <b>{{ $('8. Rule-Based + AI Assessment').item.json.candidate.jobRole }}</b> position. After careful review, we've decided not to move forward with your application at this time. We appreciate your interest and encourage you to apply for future openings that match your profile.</p>\n<p>Best regards,<br>Recruitment Team</p>",
+        "options": {}
+      },
+      "id": "2549fbdf-3b54-4b8e-abb5-08b053191159",
+      "name": "12b. Send Rejection Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "webhookId": "c9c73580-29d1-4cfb-9a54-54c13bb7c9c5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "candidateId"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "eb6c4dc8-5200-4650-81ad-a1256b21758e",
+      "name": "13a. Update Sheet — Shortlisted",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        0
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g",
+          "mode": "list",
+          "cachedResultName": "Candidates",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1tq5pAUc5mYb2IuN2rQeHK-j8PcK0Fsh5_B3gkJxlg9g/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "candidateId"
+          ],
+          "schema": [
+            {
+              "id": "candidateId",
+              "displayName": "candidateId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "jobRole",
+              "displayName": "jobRole",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "appliedAt",
+              "displayName": "appliedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "finalScore",
+              "displayName": "finalScore",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "skills",
+              "displayName": "skills",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decisionBy",
+              "displayName": "decisionBy",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "decidedAt",
+              "displayName": "decidedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resumeBase64",
+              "displayName": "resumeBase64",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "resumeText",
+              "displayName": "resumeText",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "threadId",
+              "displayName": "threadId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "labelIds",
+              "displayName": "labelIds",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "5b75da14-7d1f-4bde-ab2e-657787ee7556",
+      "name": "13b. Update Sheet — Rejected",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        240
+      ],
+      "retryOnFail": true,
+      "maxTries": 3,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Centralized error logger — catches failures from any node with onError: continueErrorOutput\nconst err = $input.first().json;\nreturn [{\n  json: {\n    errorTimestamp: new Date().toISOString(),\n    errorMessage: err.error?.message || err.message || 'Unknown error',\n    failedNode: $input.first().json.error?.node?.name || 'Unknown node',\n    candidateContext: $('2. Store Candidate Data').first()?.json || {}\n  }\n}];"
+      },
+      "id": "ecce2c1e-938a-40a2-ae03-2a72a3ffa958",
+      "name": "14. Log Error Details",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2048,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1ikpAKmy1pkbhTazqrPHZKRv-nR5Ul5kVNic3P2GQdFg",
+          "mode": "list",
+          "cachedResultName": "ErrorLog",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ikpAKmy1pkbhTazqrPHZKRv-nR5Ul5kVNic3P2GQdFg/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ikpAKmy1pkbhTazqrPHZKRv-nR5Ul5kVNic3P2GQdFg/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "eaa36a99-9084-4baf-8f1a-9a5acd11abff",
+      "name": "15. Append to Error Log Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -1680,
+        416
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "yA0D1TVv1PSqXMEl",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $env.ADMIN_EMAIL || 'admin@yourcompany.com' }}",
+        "subject": "=⚠️ Recruitment Automation Error — {{ $json.failedNode }}",
+        "message": "=<p>An error occurred in the AI-Assisted Recruitment Automation workflow.</p><p><b>Node:</b> {{ $json.failedNode }}<br><b>Error:</b> {{ $json.errorMessage }}<br><b>Candidate:</b> {{ $json.candidateContext.name }} ({{ $json.candidateContext.email }})<br><b>Time:</b> {{ $json.errorTimestamp }}</p><p>Please check the n8n execution log and re-run manually if needed.</p>",
+        "options": {}
+      },
+      "id": "2158af74-fdc2-4923-a7c1-0edc9a7ddf2a",
+      "name": "16. Notify Admin of Error",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        -1392,
+        448
+      ],
+      "webhookId": "5e0abcfa-d5de-4da7-90a9-d9598143ece5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "eJ3XYE2S96TSJ24F",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": " https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: 'openai/gpt-oss-120b', temperature: 0.2, messages: [ { role: 'system', content: 'You are a strict, unbiased recruitment analysis assistant. You NEVER make a hiring decision yourself — a human recruiter always makes the final call. Return a single valid JSON object only, no markdown, no commentary. Schema: { skills: string[], yearsExperience: number|null, education: string, aiScore: number (0-100), strengths: string[], gaps: string[], aiRecommendation: Shortlist|Reject|Review Further, reason: string }. Never infer or comment on protected characteristics (age, gender, religion, ethnicity, disability, marital status). Base the score only on job-relevant skills, experience, and qualifications in the text.' }, { role: 'user', content: 'Job Role: ' + $(\"2. Store Candidate Data\").item.json.jobRole + '\\n\\nCandidate Resume Text:\\n' + ($json.resumeRawText || $json.resumeText || 'No resume text provided.') + '\\n\\nPre-extracted hints: years experience=' + $json.extractedYearsExperience + ', education=' + $json.extractedEducation + '\\n\\nReturn only the JSON object described in the system prompt.' } ] }) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -1200,
+        96
+      ],
+      "id": "a1b45ba6-bbfa-488f-b863-1776ddb9b903",
+      "name": "7. AI Analysis + Skills Extraction",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "O0sAC9onmNEKV4HN",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "1. Application Webhook": {
+      "main": [
+        [
+          {
+            "node": "2. Store Candidate Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Store Candidate Data": {
+      "main": [
+        [
+          {
+            "node": "3. Save to Candidate Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Save to Candidate Sheet": {
+      "main": [
+        [
+          {
+            "node": "4. Resume File Attached?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "14. Log Error Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Resume File Attached?": {
+      "main": [
+        [
+          {
+            "node": "5a. Convert Base64 to Binary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6. Extract Candidate Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5a. Convert Base64 to Binary": {
+      "main": [
+        [
+          {
+            "node": "5b. Extract Text From Resume PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5b. Extract Text From Resume PDF": {
+      "main": [
+        [
+          {
+            "node": "6. Extract Candidate Information",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "6. Extract Candidate Information",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "8. Rule-Based + AI Assessment": {
+      "main": [
+        [
+          {
+            "node": "9. Send Review Request to Recruiter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "9. Send Review Request to Recruiter": {
+      "main": [
+        [
+          {
+            "node": "10. Wait for Human Decision",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "10. Wait for Human Decision": {
+      "main": [
+        [
+          {
+            "node": "11. Shortlist or Reject?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "11. Shortlist or Reject?": {
+      "main": [
+        [
+          {
+            "node": "12a. Send Shortlist Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "12b. Send Rejection Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12a. Send Shortlist Email": {
+      "main": [
+        [
+          {
+            "node": "13a. Update Sheet — Shortlisted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "12b. Send Rejection Email": {
+      "main": [
+        [
+          {
+            "node": "13b. Update Sheet — Rejected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "14. Log Error Details": {
+      "main": [
+        [
+          {
+            "node": "15. Append to Error Log Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "15. Append to Error Log Sheet": {
+      "main": [
+        [
+          {
+            "node": "16. Notify Admin of Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Extract Candidate Information": {
+      "main": [
+        [
+          {
+            "node": "7. AI Analysis + Skills Extraction",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "7. AI Analysis + Skills Extraction": {
+      "main": [
+        [
+          {
+            "node": "8. Rule-Based + AI Assessment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f1ff8ab5-8e52-4433-989a-bfb03784cad6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "0b9f3fca762bd1913d64b2349b9ab9a42c2ab02dd3244e87db96630ab4148588"
+  },
+  "nodeGroups": [],
+  "id": "flHVecab4yL28OoP",
+  "tags": []
+}

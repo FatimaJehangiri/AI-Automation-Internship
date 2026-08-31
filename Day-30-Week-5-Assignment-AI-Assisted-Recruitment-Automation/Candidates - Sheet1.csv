@@ -1,0 +1,5 @@
+candidateId,name,email,phone,jobRole,appliedAt,status,finalScore,skills,decisionBy,decidedAt,resumeBase64,resumeText,id,threadId,labelIds
+1788172472672-ayesha.khan,Ayesha Khan,ayesha.khan@example.com,-1234775,Automation Engineer,2026-08-31T15:34:32.679+05:00,Received,,,,,,"6 years experience in n8n, Python, REST API integrations, and workflow automation. Bachelor of Science in Computer Science. Strong communication and stakeholder management skills.",,,
+1788172998625-bilal.a,Bilal Ahmed,bilal.a@example.com,-9876772,Automation Engineer,2026-08-31T15:43:18.632+05:00,Received,,,,,,Recent graduate with a degree in English Literature. No prior technical experience. Interested in learning new skills.,,,
+1788173296871-zara.iqbal,Zara Iqbal,zara.iqbal@example.com,-1319,,2026-08-31T15:48:16.878+05:00,Received,,,,,,3 years in customer support.,,,
+1788173406364-test.error,Test Error Case,test.error@example.com,-208,Automation Engineer,2026-08-31T15:50:06.372+05:00,Received,,,,,,Sample resume text used to trigger an intentional API failure for error-handling testing.,,,
