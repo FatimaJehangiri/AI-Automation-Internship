@@ -1,0 +1,938 @@
+{
+  "name": "AI Lead Qualification System — Core (Day 33)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "4673c196-91fc-42bc-bc97-0480899fa639",
+      "name": "Webhook - New Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        480,
+        384
+      ],
+      "webhookId": "4c56b378-7b75-47b5-99fe-9bd65925e854"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit#gid=0"
+        },
+        "event": "=rowAdded",
+        "options": {}
+      },
+      "id": "d62ef043-5f22-4db4-80ec-31de35f5636e",
+      "name": "Sheet Trigger - Poll Manual Leads",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        480,
+        640
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "PTypl9aFcTH4Bk0u",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || {};\nreturn {\n  json: {\n    name: (body.name || '').toString().trim(),\n    email: (body.email || '').toString().trim().toLowerCase(),\n    company: (body.company || '').toString().trim(),\n    title: (body.title || '').toString().trim(),\n    phone: (body.phone || '').toString().trim(),\n    message: (body.message || '').toString().trim(),\n    source: (body.source || 'Website Form').toString().trim(),\n    raw_source: 'webhook',\n  }\n};"
+      },
+      "id": "cf4dc1f4-5306-4517-9017-da81180d795f",
+      "name": "Normalize - Webhook Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.item.json || {};\nreturn {\n  json: {\n    name: (row.Name || '').toString().trim(),\n    email: (row.Email || '').toString().trim().toLowerCase(),\n    company: (row.Company || '').toString().trim(),\n    title: (row.Title || '').toString().trim(),\n    phone: (row.Phone || '').toString().trim(),\n    message: (row.Message || '').toString().trim(),\n    source: (row.Source || 'Manual Entry').toString().trim(),\n    raw_source: 'sheet',\n  }\n};"
+      },
+      "id": "4d16459b-2b4d-48e7-a0d5-ce32386255e6",
+      "name": "Normalize - Sheet Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        640
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "686d80be-dc31-4bb2-9f3b-eebdb5275713",
+      "name": "Merge - Combine Lead Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        1008,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst errors = [];\n\nif (!item.name) errors.push('Missing name');\nif (!item.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(item.email)) {\n  errors.push('Invalid or missing email');\n}\nif (!item.company) errors.push('Missing company');\n\nreturn {\n  json: {\n    ...item,\n    isValid: errors.length === 0,\n    validationErrors: errors,\n  }\n};"
+      },
+      "id": "2b040181-2103-4b31-b27c-e4c0d2427257",
+      "name": "Validate Lead Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a895afae-be2c-4235-ac3d-448369d59a8a",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "facce111-5248-460a-b19c-eed80301c42f",
+      "name": "IF - Is Lead Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "=lead_errors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "lead_email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "lead_name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "error_type",
+              "fieldValue": "validation"
+            },
+            {
+              "fieldId": "error_detail",
+              "fieldValue": "={{ $json.validationErrors.join(', ') }}"
+            },
+            {
+              "fieldId": "source_trigger",
+              "fieldValue": "={{ $json.raw_source }}"
+            },
+            {
+              "fieldId": "raw_payload",
+              "fieldValue": "={{ JSON.stringify($json) }}"
+            },
+            {
+              "fieldId": "occurred_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "c84ef78c-8ef1-4c13-9870-2e362cadae6d",
+      "name": "Log Validation Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        720
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 400,\n    success: false,\n    message: 'Lead rejected: ' + (item.validationErrors || []).join(', '),\n  }\n};"
+      },
+      "id": "45aa4af4-fa5b-4934-9198-cf58efa26401",
+      "name": "Set Response - Validation Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "=leads",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $json.email }}"
+            }
+          ]
+        }
+      },
+      "id": "e16dbbc3-4720-4d0c-b764-55e261abdc49",
+      "name": "Check Duplicate Lead",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1728,
+        352
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('Validate Lead Fields').first().json;\nconst matches = $input.all();\nconst found = matches.length > 0 && matches[0].json && matches[0].json.id;\n\nreturn [{\n  json: {\n    ...original,\n    duplicateFound: !!found,\n    existingId: found ? matches[0].json.id : null,\n  }\n}];"
+      },
+      "id": "b8a43b0e-5ad5-4212-9f32-8ab135908f35",
+      "name": "Merge Duplicate Check Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1968,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nlet score = 0;\nconst reasons = [];\n\nif (item.company) { score += 20; reasons.push('Company name provided (+20)'); }\n\nconst titleKeywords = ['ceo','founder','owner','director','vp','vice president','head','president','manager','lead'];\nconst title = (item.title || '').toLowerCase();\nif (titleKeywords.some(k => title.includes(k))) { score += 15; reasons.push('Decision-maker title (+15)'); }\n\nif (item.phone) { score += 15; reasons.push('Phone number provided (+15)'); }\n\nconst freeDomains = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com'];\nconst domain = item.email && item.email.includes('@') ? item.email.split('@')[1] : '';\nif (domain && !freeDomains.includes(domain)) { score += 20; reasons.push('Business email domain (+20)'); }\nelse if (domain && freeDomains.includes(domain)) { score -= 20; reasons.push('Free/personal email domain (-20)'); }\n\nif (item.message && item.message.length > 25) { score += 15; reasons.push('Detailed message provided (+15)'); }\n\nscore = Math.max(0, Math.min(100, score));\n\nlet tier;\nif (score >= 70) tier = 'Hot';\nelse if (score >= 40) tier = 'Warm';\nelse tier = 'Cold';\n\nreturn {\n  json: {\n    ...item,\n    rule_based_score: score,\n    preliminary_tier: tier,\n    rule_reasoning: reasons.join('; '),\n    qualification_status: 'Pending AI Review',\n  }\n};"
+      },
+      "id": "f84dd1f1-1110-4d66-b9bd-7b7cb2c476d9",
+      "name": "Apply Business Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7bcb40a2-a96e-498f-969c-b1015a0ad09a",
+              "leftValue": "={{ $json.duplicateFound }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "e467438d-08a5-4e3a-91f9-d47b3c487697",
+      "name": "IF - Existing Lead Record",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "=leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.existingId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "rule_based_score",
+              "fieldValue": "={{ $json.rule_based_score }}"
+            },
+            {
+              "fieldId": "preliminary_tier",
+              "fieldValue": "={{ $json.preliminary_tier }}"
+            },
+            {
+              "fieldId": "rule_reasoning",
+              "fieldValue": "={{ $json.rule_reasoning }}"
+            },
+            {
+              "fieldId": "qualification_status",
+              "fieldValue": "={{ $json.qualification_status }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "e4b47a0f-72d2-4359-962e-b2e28bfeb2c0",
+      "name": "Update Lead Record",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        240
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "=leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "rule_based_score",
+              "fieldValue": "={{ $json.rule_based_score }}"
+            },
+            {
+              "fieldId": "preliminary_tier",
+              "fieldValue": "={{ $json.preliminary_tier }}"
+            },
+            {
+              "fieldId": "rule_reasoning",
+              "fieldValue": "={{ $json.rule_reasoning }}"
+            },
+            {
+              "fieldId": "qualification_status",
+              "fieldValue": "={{ $json.qualification_status }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "New"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "id": "14c6235a-d94a-48fe-82cc-74db69ecaf8b",
+      "name": "Insert Lead Record",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2688,
+        448
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "c75fd4fe-301b-447a-a3df-b2cfbdbda987",
+      "name": "Merge - DB Write Success",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        2928,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "=lead_errors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "error_type",
+              "fieldValue": "appropriate error type"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.error }}"
+            }
+          ]
+        }
+      },
+      "id": "5405fdef-cf15-41f2-a39b-ea87ed6186ab",
+      "name": "Log DB Write Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2928,
+        624
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "url",
+          "value": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit?pli=1&gid=0#gid=0",
+          "__regex": "https:\\/\\/(?:drive|docs)\\.google\\.com(?:\\/.*|)\\/d\\/([0-9a-zA-Z\\-_]+)(?:\\/.*|)"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "92a29d10-e56e-4421-937c-b570e52ad3ce",
+      "name": "Write Sheet Mirror",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        3168,
+        352
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "py3SRoJN9tM1EpLD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 200,\n    success: true,\n    message: 'Lead processed successfully',\n  }\n};"
+      },
+      "id": "862226ae-1197-4652-9113-c335bd8e15e8",
+      "name": "Set Response - Lead Accepted",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3408,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 500,\n    success: false,\n    message: \"We couldn't save this lead — our team has been notified\",\n  }\n};"
+      },
+      "id": "e4ed6d95-8a26-4a26-8539-c570872e967f",
+      "name": "Set Response - Storage Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3168,
+        624
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "bb74a449-83bd-4174-b865-b0caa5b748aa",
+      "name": "Merge - Combine Response Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        3648,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7c2b3e10-fb51-4b78-b870-c0e9f2a2c196",
+              "leftValue": "={{ $json.raw_source }}",
+              "rightValue": "webhook",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c91ebef9-36a9-4016-8d55-c2ff219c3697",
+      "name": "IF - Triggered By Webhook",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        3888,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: $json.success, message: $json.message, email: $json.email, tier: $json.preliminary_tier, score: $json.rule_based_score } }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "15adad5b-b557-489d-a593-1fc261d352db",
+      "name": "Respond - Send Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        4128,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "3a62c7bc-f8b1-4271-8056-97150fcc4f70",
+      "name": "No Response Needed - Sheet Source",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        4128,
+        640
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - New Lead": {
+      "main": [
+        [
+          {
+            "node": "Normalize - Webhook Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheet Trigger - Poll Manual Leads": {
+      "main": [
+        [
+          {
+            "node": "Normalize - Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Webhook Payload": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Lead Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Lead Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge - Combine Lead Sources": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Fields": {
+      "main": [
+        [
+          {
+            "node": "IF - Is Lead Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Is Lead Valid": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Validation Error": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Lead": {
+      "main": [
+        [
+          {
+            "node": "Merge Duplicate Check Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Duplicate Check Result": {
+      "main": [
+        [
+          {
+            "node": "Apply Business Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Business Rules": {
+      "main": [
+        [
+          {
+            "node": "IF - Existing Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Existing Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Merge - DB Write Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log DB Write Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Merge - DB Write Success",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Log DB Write Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge - DB Write Success": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet Mirror",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet Mirror": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Lead Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log DB Write Error": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Storage Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response - Validation Failed": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Response Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response - Lead Accepted": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Response Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge - Combine Response Paths": {
+      "main": [
+        [
+          {
+            "node": "IF - Triggered By Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Triggered By Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond - Send Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Response Needed - Sheet Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "ed01df69-5f62-4cab-b33c-c54cef988202",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fd9254ffd043399e629c18829f756a92a51c73d54be356059b038b32026d8b84"
+  },
+  "nodeGroups": [],
+  "id": "8RG6ylMgtD5t4ylC",
+  "tags": []
+}
