@@ -1,0 +1,1488 @@
+{
+  "name": "AI Lead Qualification System — Feature-Complete (Day 34)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "lead-intake",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f8417f95-c2cb-4bb0-b131-bc9291d22d51",
+      "name": "Webhook - New Lead",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2208,
+        224
+      ],
+      "webhookId": "4c56b378-7b75-47b5-99fe-9bd65925e854"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "value": 5,
+              "unit": "minutes"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit?pli=1&gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1h1c7ek0rRmOrwwTt-DXKG5DuBH5LEDaAHCluwxSmyAI/edit#gid=0"
+        },
+        "event": "=rowAdded",
+        "options": {}
+      },
+      "id": "4aee3054-14b8-4191-bdee-5b3894de4bd9",
+      "name": "Sheet Trigger - Poll Manual Leads",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        480
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "PTypl9aFcTH4Bk0u",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || {};\nreturn {\n  json: {\n    name: (body.name || '').toString().trim(),\n    email: (body.email || '').toString().trim().toLowerCase(),\n    company: (body.company || '').toString().trim(),\n    title: (body.title || '').toString().trim(),\n    phone: (body.phone || '').toString().trim(),\n    message: (body.message || '').toString().trim(),\n    source: (body.source || 'Website Form').toString().trim(),\n    raw_source: 'webhook',\n  }\n};"
+      },
+      "id": "6b26ad25-c482-46fb-bddc-384a29fd3cf0",
+      "name": "Normalize - Webhook Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1936,
+        224
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const row = $input.item.json || {};\nreturn {\n  json: {\n    name: (row.Name || '').toString().trim(),\n    email: (row.Email || '').toString().trim().toLowerCase(),\n    company: (row.Company || '').toString().trim(),\n    title: (row.Title || '').toString().trim(),\n    phone: (row.Phone || '').toString().trim(),\n    message: (row.Message || '').toString().trim(),\n    source: (row.Source || 'Manual Entry').toString().trim(),\n    raw_source: 'sheet',\n  }\n};"
+      },
+      "id": "373e23fc-e92e-4383-894b-f1018a41cb84",
+      "name": "Normalize - Sheet Row",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1936,
+        480
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "2d9ed7ea-6d31-4c61-959d-31bdbb4f15fd",
+      "name": "Merge - Combine Lead Sources",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst errors = [];\n\nif (!item.name) errors.push('Missing name');\nif (!item.email || !/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(item.email)) {\n  errors.push('Invalid or missing email');\n}\nif (!item.company) errors.push('Missing company');\n\nreturn {\n  json: {\n    ...item,\n    isValid: errors.length === 0,\n    validationErrors: errors,\n  }\n};"
+      },
+      "id": "a47f0822-3e15-47f7-a253-b43e7a39097f",
+      "name": "Validate Lead Fields",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1440,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "a895afae-be2c-4235-ac3d-448369d59a8a",
+              "leftValue": "={{ $json.isValid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a66807fd-ff5e-43f3-8e27-c89910287fb6",
+      "name": "IF - Is Lead Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "=lead_errors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "error_type",
+              "fieldValue": "validation"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.validationErrors.join(', ') }}"
+            },
+            {
+              "fieldId": "source_trigger",
+              "fieldValue": "={{ $json.raw_source }}"
+            },
+            {
+              "fieldId": "raw_payload",
+              "fieldValue": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        }
+      },
+      "id": "220c4c42-a993-43e2-9e83-dd47b2431ea1",
+      "name": "Log Validation Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        560
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 400,\n    success: false,\n    message: 'Lead rejected: ' + (item.validationErrors || []).join(', '),\n  }\n};"
+      },
+      "id": "196ed35a-8470-486c-a519-a988ae74c3fe",
+      "name": "Set Response - Validation Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        560
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "=leads",
+        "returnAll": true,
+        "matchType": "allFilters",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "email",
+              "condition": "eq",
+              "keyValue": "={{ $json.email }}"
+            }
+          ]
+        }
+      },
+      "id": "9901f6fe-36c3-4a91-9633-d4b4f6a1e81e",
+      "name": "Check Duplicate Lead",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        192
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const original = $('Validate Lead Fields').first().json;\nconst matches = $input.all();\nconst found = matches.length > 0 && matches[0].json && matches[0].json.id;\n\nreturn [{\n  json: {\n    ...original,\n    duplicateFound: !!found,\n    existingId: found ? matches[0].json.id : null,\n  }\n}];"
+      },
+      "id": "b5e6b84e-257b-416c-bff3-3f061721507e",
+      "name": "Merge Duplicate Check Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -720,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nlet score = 0;\nconst reasons = [];\n\nif (item.company) { score += 20; reasons.push('Company name provided (+20)'); }\n\nconst titleKeywords = ['ceo','founder','owner','director','vp','vice president','head','president','manager','lead'];\nconst title = (item.title || '').toLowerCase();\nif (titleKeywords.some(k => title.includes(k))) { score += 15; reasons.push('Decision-maker title (+15)'); }\n\nif (item.phone) { score += 15; reasons.push('Phone number provided (+15)'); }\n\nconst freeDomains = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com'];\nconst domain = item.email && item.email.includes('@') ? item.email.split('@')[1] : '';\nif (domain && !freeDomains.includes(domain)) { score += 20; reasons.push('Business email domain (+20)'); }\nelse if (domain && freeDomains.includes(domain)) { score -= 20; reasons.push('Free/personal email domain (-20)'); }\n\nif (item.message && item.message.length > 25) { score += 15; reasons.push('Detailed message provided (+15)'); }\n\nscore = Math.max(0, Math.min(100, score));\n\nlet tier;\nif (score >= 70) tier = 'Hot';\nelse if (score >= 40) tier = 'Warm';\nelse tier = 'Cold';\n\nreturn {\n  json: {\n    ...item,\n    rule_based_score: score,\n    preliminary_tier: tier,\n    rule_reasoning: reasons.join('; '),\n    qualification_status: 'Pending AI Review',\n  }\n};"
+      },
+      "id": "41ea6ff2-9d63-4a1c-9369-cf24413f71dd",
+      "name": "Apply Business Rules",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7bcb40a2-a96e-498f-969c-b1015a0ad09a",
+              "leftValue": "={{ $json.duplicateFound }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b3c61b91-0e1e-49a4-beb7-26a3617c4b57",
+      "name": "IF - Existing Lead Record",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "=leads",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.existingId }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "rule_based_score",
+              "fieldValue": "={{ $json.rule_based_score }}"
+            },
+            {
+              "fieldId": "preliminary_tier",
+              "fieldValue": "={{ $json.preliminary_tier }}"
+            },
+            {
+              "fieldId": "rule_reasoning",
+              "fieldValue": "={{ $json.rule_reasoning }}"
+            },
+            {
+              "fieldId": "qualification_status",
+              "fieldValue": "={{ $json.qualification_status }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "ai_score",
+              "fieldValue": "={{ $json.ai_score }}"
+            },
+            {
+              "fieldId": "ai_tier",
+              "fieldValue": "={{ $json.ai_tier }}"
+            },
+            {
+              "fieldId": "ai_reasoning",
+              "fieldValue": "={{ $json.ai_reasoning }}"
+            },
+            {
+              "fieldId": "recommended_action",
+              "fieldValue": "={{ $json.recommended_action }}"
+            },
+            {
+              "fieldId": "red_flags",
+              "fieldValue": "={{ JSON.stringify($json.red_flags) }}"
+            },
+            {
+              "fieldId": "final_score",
+              "fieldValue": "={{ $json.final_score }}"
+            },
+            {
+              "fieldId": "final_tier",
+              "fieldValue": "={{ $json.final_tier }}"
+            },
+            {
+              "fieldId": "ai_used",
+              "fieldValue": "={{ $json.ai_used }}"
+            }
+          ]
+        }
+      },
+      "id": "fb898fda-4663-4693-a91f-6a74c013fe91",
+      "name": "Update Lead Record",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        0,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "tableId": "=leads",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "company",
+              "fieldValue": "={{ $json.company }}"
+            },
+            {
+              "fieldId": "title",
+              "fieldValue": "={{ $json.title }}"
+            },
+            {
+              "fieldId": "phone",
+              "fieldValue": "={{ $json.phone }}"
+            },
+            {
+              "fieldId": "message",
+              "fieldValue": "={{ $json.message }}"
+            },
+            {
+              "fieldId": "source",
+              "fieldValue": "={{ $json.source }}"
+            },
+            {
+              "fieldId": "rule_based_score",
+              "fieldValue": "={{ $json.rule_based_score }}"
+            },
+            {
+              "fieldId": "preliminary_tier",
+              "fieldValue": "={{ $json.preliminary_tier }}"
+            },
+            {
+              "fieldId": "rule_reasoning",
+              "fieldValue": "={{ $json.rule_reasoning }}"
+            },
+            {
+              "fieldId": "qualification_status",
+              "fieldValue": "={{ $json.qualification_status }}"
+            },
+            {
+              "fieldId": "updated_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "status",
+              "fieldValue": "New"
+            },
+            {
+              "fieldId": "created_at",
+              "fieldValue": "={{ $now.toISO() }}"
+            },
+            {
+              "fieldId": "ai_score",
+              "fieldValue": "={{ $json.ai_score }}"
+            },
+            {
+              "fieldId": "ai_tier",
+              "fieldValue": "={{ $json.ai_tier }}"
+            },
+            {
+              "fieldId": "ai_reasoning",
+              "fieldValue": "={{ $json.ai_reasoning }}"
+            },
+            {
+              "fieldId": "recommended_action",
+              "fieldValue": "={{ $json.recommended_action }}"
+            },
+            {
+              "fieldId": "red_flags",
+              "fieldValue": "={{ JSON.stringify($json.red_flags) }}"
+            },
+            {
+              "fieldId": "final_score",
+              "fieldValue": "={{ $json.final_score }}"
+            },
+            {
+              "fieldId": "final_tier",
+              "fieldValue": "={{ $json.final_tier }}"
+            },
+            {
+              "fieldId": "ai_used",
+              "fieldValue": "={{ $json.ai_used }}"
+            }
+          ]
+        }
+      },
+      "id": "3654585d-367c-43e1-bdc5-73212a1aa242",
+      "name": "Insert Lead Record",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        384
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "903c5561-6134-4d8a-a6a2-c55bcd728211",
+      "name": "Merge - DB Write Success",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        240,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "=lead_errors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "error_type",
+              "fieldValue": "appropriate error type"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ $json.error }}"
+            }
+          ]
+        }
+      },
+      "id": "c37d428d-6c18-430d-b85a-7354cc081bfe",
+      "name": "Log DB Write Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        240,
+        464
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1qu9Iv7cjHv48_EV9IBqEtnVLmnPo-Uyv-W1817g05-U/edit?gid=0#gid=0",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qu9Iv7cjHv48_EV9IBqEtnVLmnPo-Uyv-W1817g05-U/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "company",
+              "displayName": "company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "message",
+              "displayName": "message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rule_based_score",
+              "displayName": "rule_based_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "preliminary_tier",
+              "displayName": "preliminary_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "rule_reasoning",
+              "displayName": "rule_reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "qualification_status",
+              "displayName": "qualification_status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_score",
+              "displayName": "ai_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_tier",
+              "displayName": "ai_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_reasoning",
+              "displayName": "ai_reasoning",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "recommended_action",
+              "displayName": "recommended_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "red_flags",
+              "displayName": "red_flags",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final_score",
+              "displayName": "final_score",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final_tier",
+              "displayName": "final_tier",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ai_used",
+              "displayName": "ai_used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "a51e1cf5-baca-4501-b773-410aeff99e1e",
+      "name": "Write Sheet Mirror",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        192
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "py3SRoJN9tM1EpLD",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 200,\n    success: true,\n    message: 'Lead processed successfully',\n  }\n};"
+      },
+      "id": "d6458977-14cb-41c3-943f-6f63d3ead108",
+      "name": "Set Response - Lead Accepted",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nreturn {\n  json: {\n    ...item,\n    statusCode: 500,\n    success: false,\n    message: \"We couldn't save this lead — our team has been notified\",\n  }\n};"
+      },
+      "id": "092f15ec-77f5-4bb0-a379-6cc256a42a44",
+      "name": "Set Response - Storage Failed",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        464
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "d3970da6-2a47-4fab-9888-ed4d420f26d3",
+      "name": "Merge - Combine Response Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        960,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "7c2b3e10-fb51-4b78-b870-c0e9f2a2c196",
+              "leftValue": "={{ $json.raw_source }}",
+              "rightValue": "webhook",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ae0bc384-d7cf-4ede-a94e-d57516608bc8",
+      "name": "IF - Triggered By Webhook",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { success: $json.success, message: $json.message, email: $json.email, tier: $json.preliminary_tier, score: $json.rule_based_score } }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "d5903a28-6248-442f-b020-8ec1513ac883",
+      "name": "Respond - Send Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1440,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "f94b96b3-e402-40d6-bbeb-c019bbb609a7",
+      "name": "No Response Needed - Sheet Source",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        480
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\nconst prompt = `You are a B2B sales qualification assistant. Score this lead using judgement that goes beyond simple keyword rules (consider intent, seniority, message quality, and fit signals together).\\n\\nLead data:\\nName: ${item.name}\\nEmail: ${item.email}\\nCompany: ${item.company}\\nTitle: ${item.title}\\nPhone: ${item.phone || 'not provided'}\\nMessage: \\\"${item.message || ''}\\\"\\nSource: ${item.source}\\n\\nRule-based pre-score (for reference only, you may agree or disagree): ${item.rule_based_score}/100 (${item.preliminary_tier}). Reasoning: ${item.rule_reasoning}\\n\\nRespond with ONLY a single JSON object, no markdown, no commentary, matching exactly this shape:\\n{\\\"ai_score\\\": <integer 0-100>, \\\"ai_tier\\\": \\\"Hot\\\"|\\\"Warm\\\"|\\\"Cold\\\", \\\"ai_reasoning\\\": \\\"<one or two sentences>\\\", \\\"recommended_action\\\": \\\"<one short sentence, e.g. next step for sales>\\\", \\\"red_flags\\\": [\\\"<short flag>\\\", ...]}`;\n\nreturn {\n  json: {\n    ...item,\n    ai_prompt: prompt,\n  }\n};"
+      },
+      "id": "ad597974-e94a-4a40-9529-6ce5be9d22f6",
+      "name": "AI - Build Scoring Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ model: \"openai/gpt-oss-120b\" , temperature: 0.2, max_tokens: 400, response_format: { type: \"json_object\" }, messages: [ { role: \"system\", content: \"You are a strict JSON API. Always return only valid JSON, matching the requested shape exactly. Never include markdown fences or extra text.\" }, { role: \"user\", content: $json.ai_prompt } ] }) }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "5fe1e4a3-a0d5-4b50-a688-63ad96c8e002",
+      "name": "AI - Groq Structured Scoring",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -240,
+        16
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "Yrb1jLizxWrGrWjm",
+          "name": "Header Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Success branch: Groq responded. Parse + validate its structured output.\nconst item = $json;\nlet ai = null;\nlet fallbackReason = null;\ntry {\n  const content = item.choices[0].message.content;\n  const parsed = JSON.parse(content);\n  const validTiers = ['Hot', 'Warm', 'Cold'];\n  const scoreOk = typeof parsed.ai_score === 'number' && parsed.ai_score >= 0 && parsed.ai_score <= 100;\n  const tierOk = validTiers.includes(parsed.ai_tier);\n  if (!scoreOk || !tierOk) {\n    throw new Error('AI output failed schema validation (score/tier out of range or missing)');\n  }\n  ai = {\n    ai_score: Math.round(parsed.ai_score),\n    ai_tier: parsed.ai_tier,\n    ai_reasoning: (parsed.ai_reasoning || '').toString().slice(0, 500),\n    recommended_action: (parsed.recommended_action || '').toString().slice(0, 300),\n    red_flags: Array.isArray(parsed.red_flags) ? parsed.red_flags.slice(0, 10) : [],\n  };\n} catch (err) {\n  fallbackReason = 'AI response invalid/unparseable: ' + err.message;\n}\n\nconst original = $('AI - Build Scoring Prompt').first().json;\ndelete original.ai_prompt;\n\nif (ai) {\n  return { json: { ...original, ...ai, ai_used: true, ai_fallback_reason: null } };\n}\nreturn {\n  json: {\n    ...original,\n    ai_score: original.rule_based_score,\n    ai_tier: original.preliminary_tier,\n    ai_reasoning: 'AI scoring unavailable — using rule-based score.',\n    recommended_action: 'Review manually.',\n    red_flags: [],\n    ai_used: false,\n    ai_fallback_reason: fallbackReason,\n  }\n};"
+      },
+      "id": "b3a5acaf-d3be-4acc-948e-fc45306cee1b",
+      "name": "AI - Process & Validate Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        -64
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Error branch: the Groq HTTP call itself failed (timeout, 4xx/5xx, rate limit, network).\nconst original = $('AI - Build Scoring Prompt').first().json;\ndelete original.ai_prompt;\nreturn {\n  json: {\n    ...original,\n    ai_score: original.rule_based_score,\n    ai_tier: original.preliminary_tier,\n    ai_reasoning: 'AI scoring unavailable — using rule-based score.',\n    recommended_action: 'Review manually.',\n    red_flags: [],\n    ai_used: false,\n    ai_fallback_reason: 'AI API call failed: ' + ($json.error || $json.message || 'unknown error'),\n  }\n};"
+      },
+      "id": "a8697629-ca98-4ca7-98ef-8cee2cadd446",
+      "name": "AI - Fallback on API Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        240
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "740bc141-7499-4602-a685-19407668540c",
+      "name": "Merge - AI Result Paths",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2,
+      "position": [
+        240,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.item.json;\n// Final decision: trust AI tier when AI ran successfully, otherwise the rule-based tier is already copied in.\nconst final_score = item.ai_used ? item.ai_score : item.rule_based_score;\nconst final_tier = item.ai_used ? item.ai_tier : item.preliminary_tier;\nreturn {\n  json: {\n    ...item,\n    final_score,\n    final_tier,\n    qualification_status: item.ai_used ? 'Qualified - AI Reviewed' : 'Qualified - Rule Based (AI Unavailable)',\n    notify_required: final_tier === 'Hot',\n  }\n};"
+      },
+      "id": "c63bc9a0-16d2-40cd-9126-e778e1a4b7dc",
+      "name": "Finalize Qualification",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "bb000000-0000-4000-8000-000000000010",
+              "leftValue": "={{ $json.notify_required }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "915ad0c9-437b-4cb2-b427-d158e3fb13df",
+      "name": "IF - Notify Hot Lead",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        480,
+        672
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "sales-team@yourcompany.com",
+        "subject": "=Hot Lead: {{$json.name}} @ {{$json.company}} — Score {{$json.final_score}}",
+        "message": "=<p>A new lead was just qualified as <b>{{$json.final_tier}}</b>.</p><ul><li><b>Name:</b> {{$json.name}}</li><li><b>Email:</b> {{$json.email}}</li><li><b>Company:</b> {{$json.company}}</li><li><b>Title:</b> {{$json.title}}</li><li><b>Phone:</b> {{$json.phone}}</li><li><b>Score:</b> {{$json.final_score}}/100</li></ul><p><b>AI reasoning:</b> {{$json.ai_reasoning}}</p><p><b>Recommended action:</b> {{$json.recommended_action}}</p>",
+        "options": {}
+      },
+      "id": "5ef3aceb-e41f-4690-a3fa-8403a1716563",
+      "name": "Gmail - Notify Sales Rep",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        480
+      ],
+      "webhookId": "a65b9011-dc3f-418d-8c70-d443382b3ae9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "j0qDuARIJ7oOBZQD",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {},
+      "id": "14560678-9090-4dd2-8d03-89357c6283cc",
+      "name": "No Notification Needed",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        640
+      ]
+    },
+    {
+      "parameters": {
+        "tableId": "=lead_errors",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "email",
+              "fieldValue": "={{ $json.email }}"
+            },
+            {
+              "fieldId": "name",
+              "fieldValue": "={{ $json.name }}"
+            },
+            {
+              "fieldId": "error_type",
+              "fieldValue": "notification"
+            },
+            {
+              "fieldId": "error_message",
+              "fieldValue": "={{ JSON.stringify($json.error || $json.message || 'Notification delivery failed') }}"
+            },
+            {
+              "fieldId": "source_trigger",
+              "fieldValue": "={{ $json.raw_source }}"
+            },
+            {
+              "fieldId": "raw_payload",
+              "fieldValue": "={{ JSON.stringify($json) }}"
+            }
+          ]
+        }
+      },
+      "id": "09d21f2a-f2cf-40e2-bce1-7c7887f1b944",
+      "name": "Log Notification Error",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        640
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "6mcVL48xyQoTWlTL",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook - New Lead": {
+      "main": [
+        [
+          {
+            "node": "Normalize - Webhook Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheet Trigger - Poll Manual Leads": {
+      "main": [
+        [
+          {
+            "node": "Normalize - Sheet Row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Webhook Payload": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Lead Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize - Sheet Row": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Lead Sources",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge - Combine Lead Sources": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Fields": {
+      "main": [
+        [
+          {
+            "node": "IF - Is Lead Valid",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Is Lead Valid": {
+      "main": [
+        [
+          {
+            "node": "Check Duplicate Lead",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Validation Error": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Validation Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Duplicate Lead": {
+      "main": [
+        [
+          {
+            "node": "Merge Duplicate Check Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Duplicate Check Result": {
+      "main": [
+        [
+          {
+            "node": "Apply Business Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apply Business Rules": {
+      "main": [
+        [
+          {
+            "node": "AI - Build Scoring Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Existing Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Merge - DB Write Success",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log DB Write Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Merge - DB Write Success",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Log DB Write Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge - DB Write Success": {
+      "main": [
+        [
+          {
+            "node": "Write Sheet Mirror",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "IF - Notify Hot Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Sheet Mirror": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Lead Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log DB Write Error": {
+      "main": [
+        [
+          {
+            "node": "Set Response - Storage Failed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Response - Validation Failed": {
+      "main": [
+        []
+      ]
+    },
+    "Set Response - Lead Accepted": {
+      "main": [
+        [
+          {
+            "node": "Merge - Combine Response Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge - Combine Response Paths": {
+      "main": [
+        [
+          {
+            "node": "IF - Triggered By Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Triggered By Webhook": {
+      "main": [
+        [
+          {
+            "node": "Respond - Send Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Response Needed - Sheet Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Build Scoring Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI - Groq Structured Scoring",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Groq Structured Scoring": {
+      "main": [
+        [
+          {
+            "node": "AI - Process & Validate Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI - Fallback on API Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Process & Validate Response": {
+      "main": [
+        [
+          {
+            "node": "Merge - AI Result Paths",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI - Fallback on API Failure": {
+      "main": [
+        [
+          {
+            "node": "Merge - AI Result Paths",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge - AI Result Paths": {
+      "main": [
+        [
+          {
+            "node": "Finalize Qualification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Qualification": {
+      "main": [
+        [
+          {
+            "node": "IF - Existing Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF - Notify Hot Lead": {
+      "main": [
+        [
+          {
+            "node": "Gmail - Notify Sales Rep",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Notification Needed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail - Notify Sales Rep": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Log Notification Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "69d6b634-882e-4f85-83ed-f41b43d82375",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "fd9254ffd043399e629c18829f756a92a51c73d54be356059b038b32026d8b84"
+  },
+  "nodeGroups": [],
+  "id": "Nm0JAALSdEJi6kQk",
+  "tags": []
+}
